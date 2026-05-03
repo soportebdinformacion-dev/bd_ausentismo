@@ -181,33 +181,42 @@
         input.style.display = (tipo === "Ingrese en la fecha:") ? "block" : "none";
     }
 
-    async function buscarDNI() {
-        const dniVal = document.getElementById('dni').value;
-        const persona = await db.personal.get(dniVal);
-        if(persona) {
-            document.getElementById('nombres').value = persona.ApellidosNombres || '';
-            document.getElementById('sexo').value = persona.Sexo || '';
-            document.getElementById('edad').value = persona.Edad || '';
-            document.getElementById('celular').value = persona.Celular || '';
-            document.getElementById('fundo').value = persona.Fundo || '';
-            document.getElementById('area').value = persona.Area || '';
-            document.getElementById('cargo').value = persona.Cargo || '';
-            document.getElementById('fechaIngreso').value = persona.FechaIngreso || '';
-            document.getElementById('tipoTrabajador').value = persona.TIPO || '';
-        } else {
-            alert("DNI no encontrado localmente.");
-        }
+    // BÚSQUEDA DE DNI CORREGIDA
+async function buscarDNI() {
+    const dniInput = document.getElementById('dni').value.toString().trim();
+    if (dniInput.length < 8) return alert("Ingrese un DNI válido de 8 dígitos");
+    
+    // Buscamos en la base de datos local (IndexedDB)
+    // Intentamos encontrarlo convirtiendo ambos a String para evitar errores de formato
+    const todasLasPersonas = await db.personal.toArray();
+    const persona = todasLasPersonas.find(p => p.DNI.toString().trim() === dniInput);
+
+    if (persona) {
+        document.getElementById('nombres').value = persona.ApellidosNombres || '';
+        document.getElementById('sexo').value = persona.Sexo || '';
+        document.getElementById('edad').value = persona.Edad || '';
+        document.getElementById('celular').value = persona.Celular || '';
+        document.getElementById('fundo').value = persona.Fundo || '';
+        document.getElementById('area').value = persona.Area || '';
+        document.getElementById('cargo').value = persona.Cargo || '';
+        document.getElementById('fechaIngreso').value = persona.FechaIngreso || '';
+        document.getElementById('tipoTrabajador').value = persona.TIPO || '';
+        console.log("Trabajador encontrado:", persona);
+    } else {
+        alert("DNI " + dniInput + " no encontrado. Intente sincronizar con internet.");
     }
+}
 
     async function actualizarPadron() {
-        if(!navigator.onLine) return;
-        try {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            await db.personal.clear();
-            await db.personal.bulkPut(data);
-        } catch(e) { console.log(e); }
-    }
+    if(!navigator.onLine) return;
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        console.log("Datos recibidos de Sheets:", data); // <--- AÑADE ESTO PARA VER EN CONSOLA
+        await db.personal.clear();
+        await db.personal.bulkPut(data);
+    } catch(e) { console.error("Error de conexión:", e); }
+}
 
     document.getElementById('formAusentismo').onsubmit = async (e) => {
         e.preventDefault();
