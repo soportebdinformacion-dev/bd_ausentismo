@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrícola Huarmey - Ausentismo 2026</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gris); margin: 0; padding: 15px; }
+        .container { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid var(--rojo); }
+        .logo { display: block; margin: 0 auto 20px; width: 180px; }
+        h2 { color: var(--verde); text-align: center; font-size: 1.2rem; margin-bottom: 20px; }
+        fieldset { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; padding: 15px; }
+        legend { font-weight: bold; color: var(--rojo); padding: 0 10px; }
+        label { display: block; margin-top: 12px; font-weight: 600; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        input[readonly] { background: #f0f0f0; color: #555; }
+        .btn-search { background: var(--verde); color: white; border: none; padding: 12px; margin-top: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
+        .btn-submit { background: var(--rojo); color: white; border: none; width: 100%; padding: 18px; border-radius: 8px; font-size: 18px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .status-bar { text-align: center; padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: bold; font-size: 13px; }
+        .online { background: #C8E6C9; color: #2E7D32; }
+        .offline { background: #FFCDD2; color: #C62828; }
+        
+        #seccionPreguntas, #contenedorRetorno { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img src="ICONO HUARMEY.png" class="logo" alt="Logo Agrícola Huarmey">
+    <h2>Control de Ausentismo - Campaña 2026</h2>
+
+    <form id="formAusentismo">
+        <fieldset>
+            <legend>1. INFORMACIÓN PERSONAL</legend>
+            
+            <label>Tipo de registro:</label>
+            <select id="tipoRegistro" required>
+                <option value="Registro independiente">Registro independiente</option>
+                <option value="JOSE CHAVEZ">JOSE CHAVEZ</option>
+                <option value="RIVALDO VALLES">RIVALDO VALLES</option>
+                <option value="ALEX RUFASTO">ALEX RUFASTO</option>
+                <option value="OSCAR BARREDA">OSCAR BARREDA</option>
+                <option value="PILAR MONJA">PILAR MONJA</option>
+            </select>
+
+            <label>DNI:</label>
+            <input type="number" id="dni" required placeholder="Ingrese 8 dígitos">
+            <button type="button" class="btn-search" onclick="buscarDNI()">🔍 BUSCAR TRABAJADOR</button>
+
+            <label>Apellidos y nombres:</label>
+            <input type="text" id="nombres" readonly>
+
+            <div style="display:flex; gap:10px">
+                <div style="flex:1"><label>Sexo:</label><input type="text" id="sexo" readonly></div>
+                <div style="flex:1"><label>Edad:</label><input type="text" id="edad" readonly></div>
+            </div>
+
+            <label>Celular:</label>
+            <input type="text" id="celular" readonly>
+
+            <label>Fundo:</label>
+            <input type="text" id="fundo" readonly>
+
+            <label>Área:</label>
+            <input type="text" id="area" readonly>
+
+            <label>Cargo:</label>
+            <input type="text" id="cargo" readonly>
+
+            <label>Fecha de ingreso:</label>
+            <input type="text" id="fechaIngreso" readonly>
+
+            <label>TIPO:</label>
+            <input type="text" id="tipoTrabajador" readonly>
+        </fieldset>
+
+        <fieldset>
+            <legend>2. LLAMADAS DE ENCUESTA</legend>
+            
+            <label>¿Se logró contactar?:</label>
+            <select id="contacto" required onchange="toggleSeccionPreguntas()">
+                <option value="">Seleccione...</option>
+                <option value="SI">SI</option>
+                <option value="NO">NO</option>
+                <option value="NUMERO APAGADO">NUMERO APAGADO</option>
+                <option value="NUMERO EQUIVOCADO">NUMERO EQUIVOCADO</option>
+                <option value="NO RESPONDE">NO RESPONDE</option>
+                <option value="NUMERO NO VALIDO">NUMERO NO VALIDO</option>
+            </select>
+
+            <div id="seccionPreguntas">
+                <label>Fecha de llamada:</label>
+                <input type="date" id="fechaLlamada">
+
+                <label>Motivo de ausencia:</label>
+                <select id="motivo">
+                    <option value="Ninguno.">Ninguno.</option>
+                    <option value="Descanso médico (Absentismo).">Descanso médico (Absentismo).</option>
+                    <option value="Permiso con papeleta (Absentismo).">Permiso con papeleta (Absentismo).</option>
+                    <option value="Enfermedad">Enfermedad</option>
+                    <option value="Problemas familiares">Problemas familiares</option>
+                    <option value="Transporte (Especificar en observaciones)">Transporte (Especificar en observaciones)</option>
+                    <option value="Otro trabajo (Especificar en observaciones).">Otro trabajo (Especificar en observaciones).</option>
+                    <option value="Desmotivación.">Desmotivación.</option>
+                    <option value="Sacar tarjeta.">Sacar tarjeta.</option>
+                    <option value="Pago.">Pago.</option>
+                    <option value="Horario.">Horario.</option>
+                    <option value="Alimentación.">Alimentación.</option>
+                    <option value="Campamento.">Campamento.</option>
+                    <option value="Ambiente laboral.">Ambiente laboral.</option>
+                    <option value="Renuncia (Especificar en observaciones).">Renuncia (Especificar en observaciones).</option>
+                    <option value="Problemas con el caporal (Especificar en observaciones).">Problemas con el caporal (Especificar en observaciones).</option>
+                    <option value="Estudios.">Estudios.</option>
+                    <option value="Viaje.">Viaje.</option>
+                    <option value="Accidente.">Accidente.</option>
+                    <option value="No desea continuar (Especificar en observaciones)">No desea continuar (Especificar en observaciones)</option>
+                </select>
+
+                <label>¿Vas a regresar?:</label>
+                <select id="regresa" onchange="toggleFechaRetorno()">
+                    <option value="">Seleccione...</option>
+                    <option value="SI">SI</option>
+                    <option value="NO">NO</option>
+                    <option value="Lo esta pensando.">Lo esta pensando.</option>
+                </select>
+
+                <div id="contenedorRetorno">
+                    <label>Fecha de retorno:</label>
+                    <select id="tipoRetorno" onchange="toggleCalendarioRetorno()">
+                        <option value="Inmediato">Inmediato</option>
+                        <option value="Ingrese en la fecha:">Ingrese en la fecha:</option>
+                    </select>
+                    <input type="date" id="fechaRetornoInput" style="display:none; margin-top:10px;">
+                </div>
+
+                <label>¿Que tendría que mejorar la empresa?:</label>
+                <textarea id="mejora" rows="2"></textarea>
+            </div>
+
+            <label>Observaciones:</label>
+            <textarea id="observaciones" rows="2"></textarea>
+        </fieldset>
+
+        <button type="submit" class="btn-submit">GUARDAR Y ENVIAR</button>
+    </form>
+
+    <div id="networkStatus" class="status-bar online">● Sistema en Línea</div>
+</div>
+
+<script src="https://unpkg.com/dexie@3.2.0/dist/dexie.min.js"></script>
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzo0Fe1DTKo064CMk6TCs0oAJnXyyvmboit5RNFmM1TB7surJEpsXWtWPI_-fu9PvPR/exec'; 
+
+    const db = new Dexie('HuarmeyAusentismo');
+    db.version(1).stores({
+        personal: 'DNI',
+        registros: '++id, synchronized'
+    });
+
+    function toggleSeccionPreguntas() {
+        const contacto = document.getElementById('contacto').value;
+        const seccion = document.getElementById('seccionPreguntas');
+        seccion.style.display = (contacto === "SI") ? "block" : "none";
+        if (contacto !== "SI") {
+            document.getElementById('regresa').value = "";
+            toggleFechaRetorno();
+        }
+    }
+
+    function toggleFechaRetorno() {
+        const regresa = document.getElementById('regresa').value;
+        const contenedor = document.getElementById('contenedorRetorno');
+        contenedor.style.display = (regresa === "SI") ? "block" : "none";
+    }
+
+    function toggleCalendarioRetorno() {
+        const tipo = document.getElementById('tipoRetorno').value;
+        const input = document.getElementById('fechaRetornoInput');
+        input.style.display = (tipo === "Ingrese en la fecha:") ? "block" : "none";
+    }
+
+    async function buscarDNI() {
+        const dniVal = document.getElementById('dni').value;
+        const persona = await db.personal.get(dniVal);
+        if(persona) {
+            document.getElementById('nombres').value = persona.ApellidosNombres || '';
+            document.getElementById('sexo').value = persona.Sexo || '';
+            document.getElementById('edad').value = persona.Edad || '';
+            document.getElementById('celular').value = persona.Celular || '';
+            document.getElementById('fundo').value = persona.Fundo || '';
+            document.getElementById('area').value = persona.Area || '';
+            document.getElementById('cargo').value = persona.Cargo || '';
+            document.getElementById('fechaIngreso').value = persona.FechaIngreso || '';
+            document.getElementById('tipoTrabajador').value = persona.TIPO || '';
+        } else {
+            alert("DNI no encontrado localmente.");
+        }
+    }
+
+    async function actualizarPadron() {
+        if(!navigator.onLine) return;
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            await db.personal.clear();
+            await db.personal.bulkPut(data);
+        } catch(e) { console.log(e); }
+    }
+
+    document.getElementById('formAusentismo').onsubmit = async (e) => {
+        e.preventDefault();
+        let fRetorno = document.getElementById('tipoRetorno').value === "Ingrese en la fecha:" ? 
+                       document.getElementById('fechaRetornoInput').value : document.getElementById('tipoRetorno').value;
+
+        const reg = {
+            tipoRegistro: document.getElementById('tipoRegistro').value,
+            dni: document.getElementById('dni').value,
+            nombres: document.getElementById('nombres').value,
+            contacto: document.getElementById('contacto').value,
+            fechaLlamada: document.getElementById('fechaLlamada').value,
+            motivo: document.getElementById('motivo').value,
+            regresa: document.getElementById('regresa').value,
+            fechaRetorno: fRetorno,
+            mejora: document.getElementById('mejora').value,
+            observaciones: document.getElementById('observaciones').value,
+            synchronized: 0
+        };
+
+        await db.registros.add(reg);
+        alert("✅ Registro guardado");
+        document.getElementById('formAusentismo').reset();
+        toggleSeccionPreguntas();
+        intentarSincronizar();
+    };
+
+    async function intentarSincronizar() {
+        if(!navigator.onLine) return;
+        const pends = await db.registros.where('synchronized').equals(0).toArray();
+        for(let r of pends) {
+            const f = new URLSearchParams();
+            for(let k in r) f.append(k, r[k]);
+            try {
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
+                await db.registros.update(r.id, { synchronized: 1 });
+            } catch(e) { console.log(e); }
+        }
+    }
+
+    window.addEventListener('online', () => {
+        document.getElementById('networkStatus').className = "status-bar online";
+        actualizarPadron(); intentarSincronizar();
+    });
+
+    window.addEventListener('offline', () => {
+        document.getElementById('networkStatus').className = "status-bar offline";
+    });
+
+    actualizarPadron();
+
+    // REGISTRO DEL SERVICE WORKER PARA PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('PWA lista para usar en campo', reg))
+          .catch(err => console.log('Error al registrar PWA', err));
+      });
+    }
+</script>
+</body>
+</html>
