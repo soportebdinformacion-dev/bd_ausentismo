@@ -181,15 +181,19 @@
         input.style.display = (tipo === "Ingrese en la fecha:") ? "block" : "none";
     }
 
-    // BÚSQUEDA DE DNI CORREGIDA
+   // BUSCAR DNI CON ALERTAS DE DEPURACIÓN
 async function buscarDNI() {
     const dniInput = document.getElementById('dni').value.toString().trim();
-    if (dniInput.length < 8) return alert("Ingrese un DNI válido de 8 dígitos");
-    
-    // Buscamos en la base de datos local (IndexedDB)
-    // Intentamos encontrarlo convirtiendo ambos a String para evitar errores de formato
-    const todasLasPersonas = await db.personal.toArray();
-    const persona = todasLasPersonas.find(p => p.DNI.toString().trim() === dniInput);
+    if (!dniInput) return alert("Por favor, ingrese un DNI.");
+
+    // Verificamos cuántos registros hay cargados en el celular
+    const totalRegistros = await db.personal.count();
+    if (totalRegistros === 0) {
+        alert("La base de datos está vacía. Verifique su conexión a internet y recargue la página.");
+        return;
+    }
+
+    const persona = await db.personal.get(dniInput);
 
     if (persona) {
         document.getElementById('nombres').value = persona.ApellidosNombres || '';
@@ -201,9 +205,30 @@ async function buscarDNI() {
         document.getElementById('cargo').value = persona.Cargo || '';
         document.getElementById('fechaIngreso').value = persona.FechaIngreso || '';
         document.getElementById('tipoTrabajador').value = persona.TIPO || '';
-        console.log("Trabajador encontrado:", persona);
     } else {
-        alert("DNI " + dniInput + " no encontrado. Intente sincronizar con internet.");
+        alert("El DNI " + dniInput + " no existe en el padrón actual (" + totalRegistros + " trabajadores cargados).");
+    }
+}
+
+// ACTUALIZAR PADRÓN CON MANEJO DE ERRORES
+async function actualizarPadron() {
+    if (!navigator.onLine) return;
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        
+        if (data && data.length > 0) {
+            await db.personal.clear();
+            // Forzamos que el DNI sea siempre un String para la búsqueda rápida
+            const dataFormateada = data.map(p => ({
+                ...p,
+                DNI: p.DNI.toString().trim()
+            }));
+            await db.personal.bulkPut(dataFormateada);
+            console.log("Padron actualizado: " + data.length + " registros.");
+        }
+    } catch (e) {
+        console.error("Error al obtener datos de Google Sheets:", e);
     }
 }
 
