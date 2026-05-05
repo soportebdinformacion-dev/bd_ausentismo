@@ -181,7 +181,7 @@
         input.style.display = (tipo === "Ingrese en la fecha:") ? "block" : "none";
     }
 
-    // 1. FUNCIÓN DE BÚSQUEDA CORREGIDA (Coincide con tu imagen de Excel)[cite: 2]
+    // BUSCAR DNI CORREGIDO SEGÚN TUS IMÁGENES[cite: 2]
     async function buscarDNI() {
         const dniInput = document.getElementById('dni').value.toString().trim();
         if (!dniInput) return alert("Por favor, ingrese un DNI.");
@@ -189,23 +189,23 @@
         const persona = await db.personal.get(dniInput);
 
         if (persona) {
-            document.getElementById('nombres').value = persona.ApellidosNombres || '';
-            document.getElementById('sexo').value = persona.Sexo || '';
-            document.getElementById('edad').value = persona.Edad || '';
-            document.getElementById('celular').value = persona.Celular || '';
-            document.getElementById('fundo').value = persona.Fundo || '';
-            document.getElementById('area').value = persona.Area || ''; // Sin tilde como en tu imagen[cite: 2]
-            document.getElementById('cargo').value = persona.Cargo || '';
-            document.getElementById('fechaIngreso').value = persona.FechaIngreso || '';
-            document.getElementById('tipoTrabajador').value = persona.TIPO || '';
-            console.log("Datos cargados correctamente para:", dniInput);
+            // AJUSTADO A LAS CABECERAS DE TU IMAGEN (MAYÚSCULAS Y ESPACIOS)[cite: 2]
+            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+            document.getElementById('sexo').value = persona["SEXO"] || '';
+            document.getElementById('edad').value = persona["EDAD"] || '';
+            document.getElementById('celular').value = persona["CELULAR"] || '';
+            document.getElementById('fundo').value = persona["FUNDO"] || '';
+            document.getElementById('area').value = persona["AREA"] || '';
+            document.getElementById('cargo').value = persona["CARGO"] || '';
+            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+            console.log("Datos cargados para:", dniInput);
         } else {
             const total = await db.personal.count();
-            alert("DNI " + dniInput + " no encontrado en el padrón local (" + total + " registros cargados).");
+            alert("DNI " + dniInput + " no encontrado. Registros en memoria: " + total);
         }
     }
 
-    // 2. FUNCIÓN DE CARGA INICIAL (Asegura que el DNI sea el índice)[cite: 2]
     async function actualizarPadron() {
         if (!navigator.onLine) return;
         try {
@@ -214,15 +214,12 @@
             
             if (data && data.length > 0) {
                 await db.personal.clear();
-                
-                // Mapeamos los datos asegurando que el DNI sea un texto para la búsqueda[cite: 2]
                 const dataMapeada = data.map(p => ({
                     ...p,
                     DNI: String(p.DNI).trim() 
                 }));
-                
                 await db.personal.bulkPut(dataMapeada);
-                console.log("Padrón sincronizado con Google Sheets. Total: " + dataMapeada.length);
+                console.log("Padrón sincronizado. Total: " + dataMapeada.length);
             }
         } catch (e) {
             console.error("Error al conectar con Google Sheets:", e);
@@ -249,22 +246,39 @@
         };
 
         await db.registros.add(reg);
-        alert("✅ Registro guardado");
+        alert("✅ Registro guardado localmente");
         document.getElementById('formAusentismo').reset();
         toggleSeccionPreguntas();
         intentarSincronizar();
     };
 
+    // SINCRONIZACIÓN DE SALIDA (Para que los datos lleguen al Excel)[cite: 2]
     async function intentarSincronizar() {
         if(!navigator.onLine) return;
         const pends = await db.registros.where('synchronized').equals(0).toArray();
+        
         for(let r of pends) {
             const f = new URLSearchParams();
-            for(let k in r) f.append(k, r[k]);
+            
+            // Mapeo manual para asegurar que Google Sheets reciba las columnas correctas[cite: 2]
+            f.append("TIPO REGISTRO", r.tipoRegistro);
+            f.append("DNI", r.dni);
+            f.append("APELLIDOS Y NOMBRES", r.nombres);
+            f.append("STATUS LLAMADA", r.contacto);
+            f.append("REGISTRO LLAMADA", r.fechaLlamada);
+            f.append("MOTIVO AUSENCIA", r.motivo);
+            f.append("VAS A REGRESAR", r.regresa);
+            f.append("FECHA RETORNO", r.fechaRetorno);
+            f.append("COMENTARIOS MEJORA", r.mejora);
+            f.append("OBSERVACIONES", r.observaciones);
+
             try {
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
                 await db.registros.update(r.id, { synchronized: 1 });
-            } catch(e) { console.log(e); }
+                console.log("Registro sincronizado con éxito");
+            } catch(e) { 
+                console.error("Error al enviar:", e); 
+            }
         }
     }
 
@@ -277,15 +291,13 @@
         document.getElementById('networkStatus').className = "status-bar offline";
     });
 
-    // Carga inicial
     actualizarPadron();
 
-    // REGISTRO DEL SERVICE WORKER PARA PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => console.log('PWA lista para usar en campo', reg))
-          .catch(err => console.log('Error al registrar PWA', err));
+          .then(reg => console.log('PWA lista', reg))
+          .catch(err => console.log('Error PWA', err));
       });
     }
 </script>
