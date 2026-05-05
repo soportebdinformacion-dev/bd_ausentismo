@@ -136,16 +136,16 @@
         document.getElementById('contenedorRetorno').style.display = (regresa === "SI") ? "block" : "none";
     }
 
-    // BUSCAR DNI CORREGIDO - MAPEO DIRECTO A EXCEL
+    // BUSCAR DNI CORREGIDO
 async function buscarDNI() {
     const dniInput = document.getElementById('dni').value.toString().trim();
     if (!dniInput) return alert("Por favor, ingrese un DNI.");
 
-    // Buscamos en la base de datos local (Dexie)
     const persona = await db.personal.get(dniInput);
 
     if (persona) {
-        // Usamos exactamente los nombres de las columnas de tu Excel[cite: 2]
+        // Mapeo exhaustivo basado en las cabeceras de tu Excel
+        // Se usa el operador || '' para evitar que aparezca "undefined" si el campo está vacío
         document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
         document.getElementById('sexo').value = persona["SEXO"] || '';
         document.getElementById('edad').value = persona["EDAD"] || '';
@@ -154,10 +154,13 @@ async function buscarDNI() {
         document.getElementById('area').value = persona["AREA"] || '';
         document.getElementById('cargo').value = persona["CARGO"] || '';
         document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+        
+        // Este es el único que te funcionaba porque el nombre coincidía exactamente[cite: 5]
         document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-        console.log("Datos cargados correctamente");
+        
+        console.log("Datos cargados para:", dniInput);
     } else {
-        alert("DNI no encontrado. Asegúrese de haber sincronizado el padrón con internet.");
+        alert("DNI no encontrado en el padrón local. Intente sincronizar con internet.");
     }
 }
 
