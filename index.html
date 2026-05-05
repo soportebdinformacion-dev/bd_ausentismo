@@ -14,7 +14,7 @@
         legend { font-weight: bold; color: var(--rojo); padding: 0 8px; font-size: 13px; }
         label { display: block; margin-top: 10px; font-weight: 600; font-size: 13px; }
         input, select, textarea { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        input[readonly] { background: #f0f0f0; }
+        input[readonly] { background: #f0f0f0; color: #333; }
         .btn-search { background: var(--verde); color: white; border: none; padding: 12px; margin-top: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
         .btn-submit { background: var(--rojo); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .status-bar { text-align: center; padding: 8px; margin-top: 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
@@ -26,7 +26,7 @@
 <body>
 
 <div class="container">
-    <img src="ICONO HUARMEY.png" class="logo">
+    <img src="ICONO HUARMEY.png" class="logo" alt="Logo">
     <h2>Registro de Ausentismo - Campaña 2026</h2>
 
     <form id="formAusentismo">
@@ -34,7 +34,7 @@
             <legend>1. INFORMACIÓN PERSONAL</legend>
             <label>Tipo de registro:</label>
             <select id="tipoRegistro" required>
-                <option value="Usuario de registro">Usuario de registro</option>
+                <option value="Usuario de registro">Seleccione usuario...</option>
                 <option value="JOSE CHAVEZ">JOSE CHAVEZ</option>
                 <option value="RIVALDO VALLES">RIVALDO VALLES</option>
                 <option value="ALEX RUFASTO">ALEX RUFASTO</option>
@@ -43,7 +43,7 @@
             </select>
 
             <label>DNI:</label>
-            <input type="number" id="dni" required>
+            <input type="number" id="dni" required placeholder="Ingrese DNI">
             <button type="button" class="btn-search" onclick="buscarDNI()">🔍 BUSCAR TRABAJADOR</button>
 
             <label>Apellidos y nombres:</label>
@@ -85,9 +85,9 @@
                 <label>Motivo de ausencia:</label>
                 <select id="motivo">
                     <option value="Ninguno">Ninguno</option>
+                    <option value="Descanso médico">Descanso médico</option>
                     <option value="Enfermedad">Enfermedad</option>
                     <option value="Problemas familiares">Problemas familiares</option>
-                    <option value="Viaje">Viaje</option>
                 </select>
 
                 <label>¿Vas a regresar?:</label>
@@ -102,7 +102,7 @@
                     <input type="date" id="fechaRetornoInput">
                 </div>
 
-                <label>Mejoras de la empresa:</label>
+                <label>¿Qué tendría que mejorar la empresa?:</label>
                 <textarea id="mejora" rows="2"></textarea>
             </div>
 
@@ -113,14 +113,16 @@
         <button type="submit" class="btn-submit">GUARDAR Y ENVIAR</button>
     </form>
 
-    <div id="networkStatus" class="status-bar online">● Sistema en Línea</div>
+    <div id="networkStatus" class="status-bar online">● Sincronizando datos...</div>
 </div>
 
 <script src="https://unpkg.com/dexie@3.2.0/dist/dexie.min.js"></script>
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzcCeLZ5fAIavYfSBfU-0bTIJUya1O6M4kwt84aQ-mXRcgkxCO_iBVpUiGiC0jLgzpBHg/exec'; 
+    // TU URL DE GOOGLE APPS SCRIPT
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyP7wCWo8NAy3sAzKFKKghYlU8L3YoL2FZ_mOAPnihyl0wqp9mgt_2Kw-sXrXjpWEZpKQ/exec'; 
 
-    const db = new Dexie('BD_AUSENTISMO_FINAL');
+    // Cambiamos nombre de DB para forzar limpieza
+    const db = new Dexie('BD_HUARMEY_V3'); 
     db.version(1).stores({
         personal: 'DNI',
         registros: '++id, synchronized'
@@ -136,31 +138,30 @@
         document.getElementById('contenedorRetorno').style.display = (regresa === "SI") ? "block" : "none";
     }
 
-    // BUSCAR DNI CORREGIDO: Carga todos los campos del padrón[cite: 2]
-async function buscarDNI() {
-    const dniInput = document.getElementById('dni').value.toString().trim();
-    if (!dniInput) return alert("Por favor, ingrese un DNI.");
+    // BUSCAR DNI CORREGIDO (LLAVES EXACTAS SEGÚN TU EXCEL)
+    async function buscarDNI() {
+        const dniInput = document.getElementById('dni').value.toString().trim();
+        if (!dniInput) return alert("Ingrese un DNI");
 
-    // Buscamos en la base de datos local
-    const persona = await db.personal.get(dniInput);
+        const persona = await db.personal.get(dniInput);
 
-    if (persona) {
-        // Usamos los nombres exactos de las columnas de tu Excel[cite: 2]
-        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-        document.getElementById('sexo').value = persona["SEXO"] || '';
-        document.getElementById('edad').value = persona["EDAD"] || '';
-        document.getElementById('celular').value = persona["CELULAR"] || '';
-        document.getElementById('fundo').value = persona["FUNDO"] || '';
-        document.getElementById('area').value = persona["AREA"] || '';
-        document.getElementById('cargo').value = persona["CARGO"] || '';
-        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-        
-        console.log("Datos cargados para:", dniInput);
-    } else {
-        alert("DNI no encontrado. Asegúrate de tener internet para actualizar el padrón.");
+        if (persona) {
+            // Mapeo exacto a las cabeceras de tu imagen
+            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+            document.getElementById('sexo').value = persona["SEXO"] || '';
+            document.getElementById('edad').value = persona["EDAD"] || '';
+            document.getElementById('celular').value = persona["CELULAR"] || '';
+            document.getElementById('fundo').value = persona["FUNDO"] || '';
+            document.getElementById('area').value = persona["AREA"] || '';
+            document.getElementById('cargo').value = persona["CARGO"] || '';
+            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+            console.log("Carga exitosa de:", dniInput);
+        } else {
+            const count = await db.personal.count();
+            alert("DNI no encontrado. Registros en memoria: " + count);
+        }
     }
-}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
@@ -169,10 +170,10 @@ async function buscarDNI() {
             const data = await res.json();
             if (data && data.length > 0) {
                 await db.personal.clear();
-                // Aseguramos que el DNI sea string para la búsqueda[cite: 2]
-                const dataMapeada = data.map(p => ({ ...p, DNI: String(p.DNI).trim() }));
-                await db.personal.bulkPut(dataMapeada);
-                console.log("Padrón cargado:", dataMapeada.length);
+                // Aseguramos que DNI sea String para la búsqueda
+                const dataLimpia = data.map(p => ({ ...p, DNI: String(p.DNI).trim() }));
+                await db.personal.bulkPut(dataLimpia);
+                document.getElementById('networkStatus').innerHTML = "● Sistema en Línea (" + dataLimpia.length + " trab.)";
             }
         } catch (e) { console.error("Error descarga:", e); }
     }
@@ -180,75 +181,66 @@ async function buscarDNI() {
     document.getElementById('formAusentismo').onsubmit = async (e) => {
         e.preventDefault();
         const reg = {
-            tipoRegistro: document.getElementById('tipoRegistro').value,
+            tipoReg: document.getElementById('tipoRegistro').value,
             dni: document.getElementById('dni').value,
-            nombres: document.getElementById('nombres').value,
-            sexo: document.getElementById('sexo').value,
-            edad: document.getElementById('edad').value,
-            celular: document.getElementById('celular').value,
-            fundo: document.getElementById('fundo').value,
-            area: document.getElementById('area').value,
-            cargo: document.getElementById('cargo').value,
-            fIngreso: document.getElementById('fechaIngreso').value,
-            tipoT: document.getElementById('tipoTrabajador').value,
-            contacto: document.getElementById('contacto').value,
-            fLlamada: document.getElementById('fechaLlamada').value,
-            motivo: document.getElementById('motivo').value,
-            regresa: document.getElementById('regresa').value,
-            fRetorno: document.getElementById('fechaRetornoInput').value,
-            mejora: document.getElementById('mejora').value,
+            nom: document.getElementById('nombres').value,
+            sex: document.getElementById('sexo').value,
+            eda: document.getElementById('edad').value,
+            cel: document.getElementById('celular').value,
+            fun: document.getElementById('fundo').value,
+            are: document.getElementById('area').value,
+            car: document.getElementById('cargo').value,
+            fIng: document.getElementById('fechaIngreso').value,
+            tipT: document.getElementById('tipoTrabajador').value,
+            cont: document.getElementById('contacto').value,
+            fLlam: document.getElementById('fechaLlamada').value,
+            mot: document.getElementById('motivo').value,
+            regre: document.getElementById('regresa').value,
+            fRet: document.getElementById('fechaRetornoInput').value,
+            mej: document.getElementById('mejora').value,
             obs: document.getElementById('observaciones').value,
             synchronized: 0
         };
         await db.registros.add(reg);
-        alert("Registro guardado localmente.");
+        alert("✅ Guardado localmente");
         document.getElementById('formAusentismo').reset();
         intentarSincronizar();
     };
 
-   // SINCRONIZACIÓN DE SALIDA: Envía las 19 columnas al Excel[cite: 2]
-async function intentarSincronizar() {
-    if(!navigator.onLine) return;
-    const pends = await db.registros.where('synchronized').equals(0).toArray();
-    
-    for(let r of pends) {
-        const f = new URLSearchParams();
-        
-        // Mapeo manual para asegurar que cada dato llegue a su columna[cite: 2]
-        f.append("TIPO REGISTRO", r.tipoRegistro);
-        f.append("DNI", r.dni);
-        f.append("APELLIDOS Y NOMBRES", r.nombres);
-        f.append("SEXO", r.sexo);
-        f.append("EDAD", r.edad);
-        f.append("CELULAR", r.celular);
-        f.append("FUNDO", r.fundo);
-        f.append("AREA", r.area);
-        f.append("CARGO", r.cargo);
-        f.append("FECHA INGRESO", r.fIngreso);
-        f.append("TIPO", r.tipoT);
-        f.append("STATUS LLAMADA", r.contacto);
-        f.append("REGISTRO LLAMADA", r.fLlamada);
-        f.append("MOTIVO AUSENCIA", r.motivo);
-        f.append("VAS A REGRESAR", r.regresa);
-        f.append("FECHA RETORNO", r.fRetorno);
-        f.append("COMENTARIOS MEJORA", r.mejora);
-        f.append("OBSERVACIONES", r.obs);
+    async function intentarSincronizar() {
+        if(!navigator.onLine) return;
+        const pends = await db.registros.where('synchronized').equals(0).toArray();
+        for(let r of pends) {
+            const f = new URLSearchParams();
+            f.append("TIPO REGISTRO", r.tipoReg);
+            f.append("DNI", r.dni);
+            f.append("APELLIDOS Y NOMBRES", r.nom);
+            f.append("SEXO", r.sex);
+            f.append("EDAD", r.eda);
+            f.append("CELULAR", r.cel);
+            f.append("FUNDO", r.fun);
+            f.append("AREA", r.are);
+            f.append("CARGO", r.car);
+            f.append("FECHA INGRESO", r.fIng);
+            f.append("TIPO", r.tipT);
+            f.append("STATUS LLAMADA", r.cont);
+            f.append("REGISTRO LLAMADA", r.fLlam);
+            f.append("MOTIVO AUSENCIA", r.mot);
+            f.append("VAS A REGRESAR", r.regre);
+            f.append("FECHA RETORNO", r.fRet);
+            f.append("COMENTARIOS MEJORA", r.mej);
+            f.append("OBSERVACIONES", r.obs);
 
-        try {
-            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
-            await db.registros.update(r.id, { synchronized: 1 });
-        } catch(e) { 
-            console.error("Error al enviar registro:", e); 
+            try {
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
+                await db.registros.update(r.id, { synchronized: 1 });
+            } catch(e) { console.error("Error sincronización:", e); }
         }
     }
-}
 
-    window.addEventListener('online', () => {
-        document.getElementById('networkStatus').className = "status-bar online";
-        actualizarPadron(); intentarSincronizar();
-    });
-
+    // Al cargar, actualizar padrón
     actualizarPadron();
+    setInterval(intentarSincronizar, 10000); // Intenta sincronizar cada 10 seg
 </script>
 </body>
 </html>
