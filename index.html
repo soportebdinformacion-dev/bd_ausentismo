@@ -181,67 +181,53 @@
         input.style.display = (tipo === "Ingrese en la fecha:") ? "block" : "none";
     }
 
-   // BUSCAR DNI CON ALERTAS DE DEPURACIÓN
-async function buscarDNI() {
-    const dniInput = document.getElementById('dni').value.toString().trim();
-    if (!dniInput) return alert("Por favor, ingrese un DNI.");
+    // 1. FUNCIÓN DE BÚSQUEDA CORREGIDA (Coincide con tu imagen de Excel)[cite: 2]
+    async function buscarDNI() {
+        const dniInput = document.getElementById('dni').value.toString().trim();
+        if (!dniInput) return alert("Por favor, ingrese un DNI.");
 
-    // Verificamos cuántos registros hay cargados en el celular
-    const totalRegistros = await db.personal.count();
-    if (totalRegistros === 0) {
-        alert("La base de datos está vacía. Verifique su conexión a internet y recargue la página.");
-        return;
-    }
+        const persona = await db.personal.get(dniInput);
 
-    const persona = await db.personal.get(dniInput);
-
-    if (persona) {
-        document.getElementById('nombres').value = persona.ApellidosNombres || '';
-        document.getElementById('sexo').value = persona.Sexo || '';
-        document.getElementById('edad').value = persona.Edad || '';
-        document.getElementById('celular').value = persona.Celular || '';
-        document.getElementById('fundo').value = persona.Fundo || '';
-        document.getElementById('area').value = persona.Area || '';
-        document.getElementById('cargo').value = persona.Cargo || '';
-        document.getElementById('fechaIngreso').value = persona.FechaIngreso || '';
-        document.getElementById('tipoTrabajador').value = persona.TIPO || '';
-    } else {
-        alert("El DNI " + dniInput + " no existe en el padrón actual (" + totalRegistros + " trabajadores cargados).");
-    }
-}
-
-// ACTUALIZAR PADRÓN CON MANEJO DE ERRORES
-async function actualizarPadron() {
-    if (!navigator.onLine) return;
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        
-        if (data && data.length > 0) {
-            await db.personal.clear();
-            // Forzamos que el DNI sea siempre un String para la búsqueda rápida
-            const dataFormateada = data.map(p => ({
-                ...p,
-                DNI: p.DNI.toString().trim()
-            }));
-            await db.personal.bulkPut(dataFormateada);
-            console.log("Padron actualizado: " + data.length + " registros.");
+        if (persona) {
+            document.getElementById('nombres').value = persona.ApellidosNombres || '';
+            document.getElementById('sexo').value = persona.Sexo || '';
+            document.getElementById('edad').value = persona.Edad || '';
+            document.getElementById('celular').value = persona.Celular || '';
+            document.getElementById('fundo').value = persona.Fundo || '';
+            document.getElementById('area').value = persona.Area || ''; // Sin tilde como en tu imagen[cite: 2]
+            document.getElementById('cargo').value = persona.Cargo || '';
+            document.getElementById('fechaIngreso').value = persona.FechaIngreso || '';
+            document.getElementById('tipoTrabajador').value = persona.TIPO || '';
+            console.log("Datos cargados correctamente para:", dniInput);
+        } else {
+            const total = await db.personal.count();
+            alert("DNI " + dniInput + " no encontrado en el padrón local (" + total + " registros cargados).");
         }
-    } catch (e) {
-        console.error("Error al obtener datos de Google Sheets:", e);
     }
-}
 
+    // 2. FUNCIÓN DE CARGA INICIAL (Asegura que el DNI sea el índice)[cite: 2]
     async function actualizarPadron() {
-    if(!navigator.onLine) return;
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        console.log("Datos recibidos de Sheets:", data); // <--- AÑADE ESTO PARA VER EN CONSOLA
-        await db.personal.clear();
-        await db.personal.bulkPut(data);
-    } catch(e) { console.error("Error de conexión:", e); }
-}
+        if (!navigator.onLine) return;
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            
+            if (data && data.length > 0) {
+                await db.personal.clear();
+                
+                // Mapeamos los datos asegurando que el DNI sea un texto para la búsqueda[cite: 2]
+                const dataMapeada = data.map(p => ({
+                    ...p,
+                    DNI: String(p.DNI).trim() 
+                }));
+                
+                await db.personal.bulkPut(dataMapeada);
+                console.log("Padrón sincronizado con Google Sheets. Total: " + dataMapeada.length);
+            }
+        } catch (e) {
+            console.error("Error al conectar con Google Sheets:", e);
+        }
+    }
 
     document.getElementById('formAusentismo').onsubmit = async (e) => {
         e.preventDefault();
@@ -291,6 +277,7 @@ async function actualizarPadron() {
         document.getElementById('networkStatus').className = "status-bar offline";
     });
 
+    // Carga inicial
     actualizarPadron();
 
     // REGISTRO DEL SERVICE WORKER PARA PWA
