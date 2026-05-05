@@ -120,7 +120,7 @@
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzcCeLZ5fAIavYfSBfU-0bTIJUya1O6M4kwt84aQ-mXRcgkxCO_iBVpUiGiC0jLgzpBHg/exec'; 
 
-    const db = new Dexie('BD_AUSENTISMO_V2');
+    const db = new Dexie('BD_AUSENTISMO_FINAL');
     db.version(1).stores({
         personal: 'DNI',
         registros: '++id, synchronized'
