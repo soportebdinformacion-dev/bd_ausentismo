@@ -136,16 +136,16 @@
         document.getElementById('contenedorRetorno').style.display = (regresa === "SI") ? "block" : "none";
     }
 
-    // BUSCAR DNI CORREGIDO
+    // BUSCAR DNI CORREGIDO: Carga todos los campos del padrón[cite: 2]
 async function buscarDNI() {
     const dniInput = document.getElementById('dni').value.toString().trim();
     if (!dniInput) return alert("Por favor, ingrese un DNI.");
 
+    // Buscamos en la base de datos local
     const persona = await db.personal.get(dniInput);
 
     if (persona) {
-        // Mapeo exhaustivo basado en las cabeceras de tu Excel
-        // Se usa el operador || '' para evitar que aparezca "undefined" si el campo está vacío
+        // Usamos los nombres exactos de las columnas de tu Excel[cite: 2]
         document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
         document.getElementById('sexo').value = persona["SEXO"] || '';
         document.getElementById('edad').value = persona["EDAD"] || '';
@@ -154,13 +154,11 @@ async function buscarDNI() {
         document.getElementById('area').value = persona["AREA"] || '';
         document.getElementById('cargo').value = persona["CARGO"] || '';
         document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-        
-        // Este es el único que te funcionaba porque el nombre coincidía exactamente[cite: 5]
         document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
         
         console.log("Datos cargados para:", dniInput);
     } else {
-        alert("DNI no encontrado en el padrón local. Intente sincronizar con internet.");
+        alert("DNI no encontrado. Asegúrate de tener internet para actualizar el padrón.");
     }
 }
 
@@ -208,7 +206,7 @@ async function buscarDNI() {
         intentarSincronizar();
     };
 
-   // SINCRONIZACIÓN DE SALIDA CORREGIDA (19 CAMPOS)[cite: 2]
+   // SINCRONIZACIÓN DE SALIDA: Envía las 19 columnas al Excel[cite: 2]
 async function intentarSincronizar() {
     if(!navigator.onLine) return;
     const pends = await db.registros.where('synchronized').equals(0).toArray();
@@ -216,18 +214,18 @@ async function intentarSincronizar() {
     for(let r of pends) {
         const f = new URLSearchParams();
         
-        // Mapeamos los datos para que coincidan con el doPost del script[cite: 2]
+        // Mapeo manual para asegurar que cada dato llegue a su columna[cite: 2]
         f.append("TIPO REGISTRO", r.tipoRegistro);
         f.append("DNI", r.dni);
         f.append("APELLIDOS Y NOMBRES", r.nombres);
-        f.append("SEXO", r.sexo || document.getElementById('sexo').value);
-        f.append("EDAD", r.edad || document.getElementById('edad').value);
-        f.append("CELULAR", r.celular || document.getElementById('celular').value);
-        f.append("FUNDO", r.fundo || document.getElementById('fundo').value);
-        f.append("AREA", r.area || document.getElementById('area').value);
-        f.append("CARGO", r.cargo || document.getElementById('cargo').value);
-        f.append("FECHA INGRESO", r.fIngreso || document.getElementById('fechaIngreso').value);
-        f.append("TIPO", r.tipoT || document.getElementById('tipoTrabajador').value);
+        f.append("SEXO", r.sexo);
+        f.append("EDAD", r.edad);
+        f.append("CELULAR", r.celular);
+        f.append("FUNDO", r.fundo);
+        f.append("AREA", r.area);
+        f.append("CARGO", r.cargo);
+        f.append("FECHA INGRESO", r.fIngreso);
+        f.append("TIPO", r.tipoT);
         f.append("STATUS LLAMADA", r.contacto);
         f.append("REGISTRO LLAMADA", r.fLlamada);
         f.append("MOTIVO AUSENCIA", r.motivo);
@@ -237,11 +235,10 @@ async function intentarSincronizar() {
         f.append("OBSERVACIONES", r.obs);
 
         try {
-            // Usamos 'no-cors' para evitar bloqueos de navegador en el envío[cite: 2]
             await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
             await db.registros.update(r.id, { synchronized: 1 });
         } catch(e) { 
-            console.error("Error al sincronizar:", e); 
+            console.error("Error al enviar registro:", e); 
         }
     }
 }
