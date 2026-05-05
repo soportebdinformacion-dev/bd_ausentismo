@@ -136,28 +136,30 @@
         document.getElementById('contenedorRetorno').style.display = (regresa === "SI") ? "block" : "none";
     }
 
-    // BÚSQUEDA POR DNI CORREGIDA PARA LAS CABECERAS DEL EXCEL
-    async function buscarDNI() {
-        const dniInput = document.getElementById('dni').value.toString().trim();
-        if (!dniInput) return;
+    // BUSCAR DNI CORREGIDO - MAPEO DIRECTO A EXCEL
+async function buscarDNI() {
+    const dniInput = document.getElementById('dni').value.toString().trim();
+    if (!dniInput) return alert("Por favor, ingrese un DNI.");
 
-        const persona = await db.personal.get(dniInput);
+    // Buscamos en la base de datos local (Dexie)
+    const persona = await db.personal.get(dniInput);
 
-        if (persona) {
-            // Mapeo exacto con las cabeceras de la imagen
-            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-            document.getElementById('sexo').value = persona["SEXO"] || '';
-            document.getElementById('edad').value = persona["EDAD"] || '';
-            document.getElementById('celular').value = persona["CELULAR"] || '';
-            document.getElementById('fundo').value = persona["FUNDO"] || '';
-            document.getElementById('area').value = persona["AREA"] || '';
-            document.getElementById('cargo').value = persona["CARGO"] || '';
-            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-        } else {
-            alert("DNI no encontrado en el padrón local.");
-        }
+    if (persona) {
+        // Usamos exactamente los nombres de las columnas de tu Excel[cite: 2]
+        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+        document.getElementById('sexo').value = persona["SEXO"] || '';
+        document.getElementById('edad').value = persona["EDAD"] || '';
+        document.getElementById('celular').value = persona["CELULAR"] || '';
+        document.getElementById('fundo').value = persona["FUNDO"] || '';
+        document.getElementById('area').value = persona["AREA"] || '';
+        document.getElementById('cargo').value = persona["CARGO"] || '';
+        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+        console.log("Datos cargados correctamente");
+    } else {
+        alert("DNI no encontrado. Asegúrese de haber sincronizado el padrón con internet.");
     }
+}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
@@ -203,37 +205,43 @@
         intentarSincronizar();
     };
 
-    async function intentarSincronizar() {
-        if(!navigator.onLine) return;
-        const pends = await db.registros.where('synchronized').equals(0).toArray();
-        for(let r of pends) {
-            const f = new URLSearchParams();
-            // MAPEADO SEGÚN EL DO-POST DEL SCRIPT[cite: 2]
-            f.append("TIPO REGISTRO", r.tipoRegistro);
-            f.append("DNI", r.dni);
-            f.append("APELLIDOS Y NOMBRES", r.nombres);
-            f.append("SEXO", r.sexo);
-            f.append("EDAD", r.edad);
-            f.append("CELULAR", r.celular);
-            f.append("FUNDO", r.fundo);
-            f.append("AREA", r.area);
-            f.append("CARGO", r.cargo);
-            f.append("FECHA INGRESO", r.fIngreso);
-            f.append("TIPO", r.tipoT);
-            f.append("STATUS LLAMADA", r.contacto);
-            f.append("REGISTRO LLAMADA", r.fLlamada);
-            f.append("MOTIVO AUSENCIA", r.motivo);
-            f.append("VAS A REGRESAR", r.regresa);
-            f.append("FECHA RETORNO", r.fRetorno);
-            f.append("COMENTARIOS MEJORA", r.mejora);
-            f.append("OBSERVACIONES", r.obs);
+   // SINCRONIZACIÓN DE SALIDA CORREGIDA (19 CAMPOS)[cite: 2]
+async function intentarSincronizar() {
+    if(!navigator.onLine) return;
+    const pends = await db.registros.where('synchronized').equals(0).toArray();
+    
+    for(let r of pends) {
+        const f = new URLSearchParams();
+        
+        // Mapeamos los datos para que coincidan con el doPost del script[cite: 2]
+        f.append("TIPO REGISTRO", r.tipoRegistro);
+        f.append("DNI", r.dni);
+        f.append("APELLIDOS Y NOMBRES", r.nombres);
+        f.append("SEXO", r.sexo || document.getElementById('sexo').value);
+        f.append("EDAD", r.edad || document.getElementById('edad').value);
+        f.append("CELULAR", r.celular || document.getElementById('celular').value);
+        f.append("FUNDO", r.fundo || document.getElementById('fundo').value);
+        f.append("AREA", r.area || document.getElementById('area').value);
+        f.append("CARGO", r.cargo || document.getElementById('cargo').value);
+        f.append("FECHA INGRESO", r.fIngreso || document.getElementById('fechaIngreso').value);
+        f.append("TIPO", r.tipoT || document.getElementById('tipoTrabajador').value);
+        f.append("STATUS LLAMADA", r.contacto);
+        f.append("REGISTRO LLAMADA", r.fLlamada);
+        f.append("MOTIVO AUSENCIA", r.motivo);
+        f.append("VAS A REGRESAR", r.regresa);
+        f.append("FECHA RETORNO", r.fRetorno);
+        f.append("COMENTARIOS MEJORA", r.mejora);
+        f.append("OBSERVACIONES", r.obs);
 
-            try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
-                await db.registros.update(r.id, { synchronized: 1 });
-            } catch(e) { console.error("Error sincronización:", e); }
+        try {
+            // Usamos 'no-cors' para evitar bloqueos de navegador en el envío[cite: 2]
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
+            await db.registros.update(r.id, { synchronized: 1 });
+        } catch(e) { 
+            console.error("Error al sincronizar:", e); 
         }
     }
+}
 
     window.addEventListener('online', () => {
         document.getElementById('networkStatus').className = "status-bar online";
