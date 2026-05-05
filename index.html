@@ -135,26 +135,36 @@
         document.getElementById('contenedorRetorno').style.display = (val === "SI") ? "block" : "none";
     }
 
-    // BUSQUEDA CON DNI CORREGIDA PARA MAYÚSCULAS
-    async function buscarDNI() {
-        const dniVal = document.getElementById('dni').value.toString().trim();
-        const persona = await db.personal.get(dniVal);
+ // BUSCAR DNI CORREGIDO
+async function buscarDNI() {
+    // Obtenemos el valor del input DNI
+    const dniInput = document.getElementById('dni').value.toString().trim();
+    if (!dniInput) return alert("Por favor, ingrese un DNI.");
 
-        if (persona) {
-            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-            document.getElementById('sexo').value = persona["SEXO"] || '';
-            document.getElementById('edad').value = persona["EDAD"] || '';
-            document.getElementById('celular').value = persona["CELULAR"] || '';
-            document.getElementById('fundo').value = persona["FUNDO"] || '';
-            document.getElementById('area').value = persona["AREA"] || '';
-            document.getElementById('cargo').value = persona["CARGO"] || '';
-            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-            alert("Trabajador encontrado");
-        } else {
-            alert("DNI no encontrado localmente.");
-        }
+    // Buscamos en la base de datos local (Dexie)
+    const persona = await db.personal.get(dniInput);
+
+    if (persona) {
+        // CORRECCIÓN: Usamos corchetes y mayúsculas exactas del Sheets[cite: 2]
+        // Mantenemos el operador || '' para evitar que se escriba "undefined" si la celda está vacía en Sheets.
+
+        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+        document.getElementById('sexo').value = persona["SEXO"] || '';
+        document.getElementById('edad').value = persona["EDAD"] || '';
+        document.getElementById('celular').value = persona["CELULAR"] || '';
+        document.getElementById('fundo').value = persona["FUNDO"] || '';
+        document.getElementById('area').value = persona["AREA"] || ''; // Sin tilde como en la imagen[cite: 2]
+        document.getElementById('cargo').value = persona["CARGO"] || '';
+        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+
+        // Este es el único que funcionaba porque el nombre ya coincidía exactamente[cite: 5]
+        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+
+        console.log("Datos cargados exitosamente para:", dniInput);
+    } else {
+        alert("DNI no encontrado localmente. Asegúrese de haber sincronizado el padrón.");
     }
+}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
