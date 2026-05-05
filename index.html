@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agrícola Huarmey - Ausentismo 2026</title>
+    <title>Agrícola Huarmey - Ausentismo</title>
     <style>
         :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris); margin: 0; padding: 15px; }
@@ -14,12 +14,11 @@
         legend { font-weight: bold; color: var(--rojo); padding: 0 8px; font-size: 13px; }
         label { display: block; margin-top: 10px; font-weight: 600; font-size: 13px; }
         input, select, textarea { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        input[readonly] { background: #f0f0f0; color: #333; }
+        input[readonly] { background: #f0f0f0; }
         .btn-search { background: var(--verde); color: white; border: none; padding: 12px; margin-top: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
         .btn-submit { background: var(--rojo); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .status-bar { text-align: center; padding: 8px; margin-top: 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
         .online { background: #C8E6C9; color: #2E7D32; }
-        .offline { background: #FFCDD2; color: #C62828; }
         #seccionPreguntas, #contenedorRetorno { display: none; }
     </style>
 </head>
@@ -34,7 +33,7 @@
             <legend>1. INFORMACIÓN PERSONAL</legend>
             <label>Tipo de registro:</label>
             <select id="tipoRegistro" required>
-                <option value="Usuario de registro">Seleccione usuario...</option>
+                <option value="">Seleccione usuario...</option>
                 <option value="JOSE CHAVEZ">JOSE CHAVEZ</option>
                 <option value="RIVALDO VALLES">RIVALDO VALLES</option>
                 <option value="ALEX RUFASTO">ALEX RUFASTO</option>
@@ -85,9 +84,9 @@
                 <label>Motivo de ausencia:</label>
                 <select id="motivo">
                     <option value="Ninguno">Ninguno</option>
-                    <option value="Descanso médico">Descanso médico</option>
-                    <option value="Enfermedad">Enfermedad</option>
-                    <option value="Problemas familiares">Problemas familiares</option>
+                    <option value="Salud">Salud</option>
+                    <option value="Familiar">Familiar</option>
+                    <option value="Otros">Otros</option>
                 </select>
 
                 <label>¿Vas a regresar?:</label>
@@ -102,7 +101,7 @@
                     <input type="date" id="fechaRetornoInput">
                 </div>
 
-                <label>¿Qué tendría que mejorar la empresa?:</label>
+                <label>Mejoras empresa:</label>
                 <textarea id="mejora" rows="2"></textarea>
             </div>
 
@@ -112,41 +111,36 @@
 
         <button type="submit" class="btn-submit">GUARDAR Y ENVIAR</button>
     </form>
-
-    <div id="networkStatus" class="status-bar online">● Sincronizando datos...</div>
+    <div id="status" class="status-bar online">Sincronizando padrón...</div>
 </div>
 
 <script src="https://unpkg.com/dexie@3.2.0/dist/dexie.min.js"></script>
 <script>
-    // TU URL DE GOOGLE APPS SCRIPT
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyP7wCWo8NAy3sAzKFKKghYlU8L3YoL2FZ_mOAPnihyl0wqp9mgt_2Kw-sXrXjpWEZpKQ/exec'; 
+    // REEMPLAZA ESTA URL POR LA TUYA
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwDTlK9xU0G1CyJcztnjIa0DH3ffzaFFg80XDgAJLxV7k4WBKWb1Y3gs3HptbUCoFn1/exec';
 
-    // Cambiamos nombre de DB para forzar limpieza
-    const db = new Dexie('BD_HUARMEY_V3'); 
+    const db = new Dexie('BD_HUARMEY_FINAL');
     db.version(1).stores({
         personal: 'DNI',
         registros: '++id, synchronized'
     });
 
     function toggleSeccionPreguntas() {
-        const contacto = document.getElementById('contacto').value;
-        document.getElementById('seccionPreguntas').style.display = (contacto === "SI") ? "block" : "none";
+        const val = document.getElementById('contacto').value;
+        document.getElementById('seccionPreguntas').style.display = (val === "SI") ? "block" : "none";
     }
 
     function toggleFechaRetorno() {
-        const regresa = document.getElementById('regresa').value;
-        document.getElementById('contenedorRetorno').style.display = (regresa === "SI") ? "block" : "none";
+        const val = document.getElementById('regresa').value;
+        document.getElementById('contenedorRetorno').style.display = (val === "SI") ? "block" : "none";
     }
 
-    // BUSCAR DNI CORREGIDO (LLAVES EXACTAS SEGÚN TU EXCEL)
+    // BUSQUEDA CON DNI CORREGIDA PARA MAYÚSCULAS
     async function buscarDNI() {
-        const dniInput = document.getElementById('dni').value.toString().trim();
-        if (!dniInput) return alert("Ingrese un DNI");
-
-        const persona = await db.personal.get(dniInput);
+        const dniVal = document.getElementById('dni').value.toString().trim();
+        const persona = await db.personal.get(dniVal);
 
         if (persona) {
-            // Mapeo exacto a las cabeceras de tu imagen
             document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
             document.getElementById('sexo').value = persona["SEXO"] || '';
             document.getElementById('edad').value = persona["EDAD"] || '';
@@ -156,10 +150,9 @@
             document.getElementById('cargo').value = persona["CARGO"] || '';
             document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
             document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-            console.log("Carga exitosa de:", dniInput);
+            alert("Trabajador encontrado");
         } else {
-            const count = await db.personal.count();
-            alert("DNI no encontrado. Registros en memoria: " + count);
+            alert("DNI no encontrado localmente.");
         }
     }
 
@@ -170,17 +163,16 @@
             const data = await res.json();
             if (data && data.length > 0) {
                 await db.personal.clear();
-                // Aseguramos que DNI sea String para la búsqueda
-                const dataLimpia = data.map(p => ({ ...p, DNI: String(p.DNI).trim() }));
-                await db.personal.bulkPut(dataLimpia);
-                document.getElementById('networkStatus').innerHTML = "● Sistema en Línea (" + dataLimpia.length + " trab.)";
+                const dataClean = data.map(p => ({ ...p, DNI: String(p.DNI).trim() }));
+                await db.personal.bulkPut(dataClean);
+                document.getElementById('status').innerText = "Sistema en Línea - Padrón Actualizado";
             }
-        } catch (e) { console.error("Error descarga:", e); }
+        } catch (e) { console.log(e); }
     }
 
     document.getElementById('formAusentismo').onsubmit = async (e) => {
         e.preventDefault();
-        const reg = {
+        const registro = {
             tipoReg: document.getElementById('tipoRegistro').value,
             dni: document.getElementById('dni').value,
             nom: document.getElementById('nombres').value,
@@ -201,46 +193,45 @@
             obs: document.getElementById('observaciones').value,
             synchronized: 0
         };
-        await db.registros.add(reg);
-        alert("✅ Guardado localmente");
+        await db.registros.add(registro);
+        alert("Guardado localmente. Sincronizando...");
         document.getElementById('formAusentismo').reset();
-        intentarSincronizar();
+        enviarASheets();
     };
 
-    async function intentarSincronizar() {
+    async function enviarASheets() {
         if(!navigator.onLine) return;
         const pends = await db.registros.where('synchronized').equals(0).toArray();
         for(let r of pends) {
-            const f = new URLSearchParams();
-            f.append("TIPO REGISTRO", r.tipoReg);
-            f.append("DNI", r.dni);
-            f.append("APELLIDOS Y NOMBRES", r.nom);
-            f.append("SEXO", r.sex);
-            f.append("EDAD", r.eda);
-            f.append("CELULAR", r.cel);
-            f.append("FUNDO", r.fun);
-            f.append("AREA", r.are);
-            f.append("CARGO", r.car);
-            f.append("FECHA INGRESO", r.fIng);
-            f.append("TIPO", r.tipT);
-            f.append("STATUS LLAMADA", r.cont);
-            f.append("REGISTRO LLAMADA", r.fLlam);
-            f.append("MOTIVO AUSENCIA", r.mot);
-            f.append("VAS A REGRESAR", r.regre);
-            f.append("FECHA RETORNO", r.fRet);
-            f.append("COMENTARIOS MEJORA", r.mej);
-            f.append("OBSERVACIONES", r.obs);
+            const fd = new URLSearchParams();
+            fd.append("tipoReg", r.tipoReg);
+            fd.append("dni", r.dni);
+            fd.append("nombres", r.nom);
+            fd.append("sexo", r.sex);
+            fd.append("edad", r.eda);
+            fd.append("celular", r.cel);
+            fd.append("fundo", r.fun);
+            fd.append("area", r.are);
+            fd.append("cargo", r.car);
+            fd.append("fIngreso", r.fIng);
+            fd.append("tipoT", r.tipT);
+            fd.append("contacto", r.cont);
+            fd.append("fLlamada", r.fLlam);
+            fd.append("motivo", r.mot);
+            fd.append("regresa", r.regre);
+            fd.append("fRetorno", r.fRet);
+            fd.append("mejora", r.mej);
+            fd.append("obs", r.obs);
 
             try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: fd });
                 await db.registros.update(r.id, { synchronized: 1 });
-            } catch(e) { console.error("Error sincronización:", e); }
+            } catch(e) { console.log(e); }
         }
     }
 
-    // Al cargar, actualizar padrón
     actualizarPadron();
-    setInterval(intentarSincronizar, 10000); // Intenta sincronizar cada 10 seg
+    setInterval(enviarASheets, 10000);
 </script>
 </body>
 </html>
