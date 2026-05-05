@@ -181,30 +181,28 @@
         input.style.display = (tipo === "Ingrese en la fecha:") ? "block" : "none";
     }
 
-    // BUSCAR DNI CORREGIDO SEGÚN TUS IMÁGENES[cite: 2]
-    async function buscarDNI() {
-        const dniInput = document.getElementById('dni').value.toString().trim();
-        if (!dniInput) return alert("Por favor, ingrese un DNI.");
+// BUSCAR DNI CORREGIDO
+async function buscarDNI() {
+    const dniInput = document.getElementById('dni').value.toString().trim();
+    if (!dniInput) return alert("Por favor, ingrese un DNI.");
 
-        const persona = await db.personal.get(dniInput);
+    const persona = await db.personal.get(dniInput);
 
-        if (persona) {
-            // AJUSTADO A LAS CABECERAS DE TU IMAGEN (MAYÚSCULAS Y ESPACIOS)[cite: 2]
-            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-            document.getElementById('sexo').value = persona["SEXO"] || '';
-            document.getElementById('edad').value = persona["EDAD"] || '';
-            document.getElementById('celular').value = persona["CELULAR"] || '';
-            document.getElementById('fundo').value = persona["FUNDO"] || '';
-            document.getElementById('area').value = persona["AREA"] || '';
-            document.getElementById('cargo').value = persona["CARGO"] || '';
-            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-            console.log("Datos cargados para:", dniInput);
-        } else {
-            const total = await db.personal.count();
-            alert("DNI " + dniInput + " no encontrado. Registros en memoria: " + total);
-        }
+    if (persona) {
+        // Usamos exactamente los nombres de las columnas de tu Excel[cite: 2]
+        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+        document.getElementById('sexo').value = persona["SEXO"] || '';
+        document.getElementById('edad').value = persona["EDAD"] || '';
+        document.getElementById('celular').value = persona["CELULAR"] || '';
+        document.getElementById('fundo').value = persona["FUNDO"] || '';
+        document.getElementById('area').value = persona["AREA"] || '';
+        document.getElementById('cargo').value = persona["CARGO"] || '';
+        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+    } else {
+        alert("DNI no encontrado localmente.");
     }
+}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
@@ -252,36 +250,42 @@
         intentarSincronizar();
     };
 
-    // SINCRONIZACIÓN DE SALIDA (Para que los datos lleguen al Excel)[cite: 2]
-    async function intentarSincronizar() {
-        if(!navigator.onLine) return;
-        const pends = await db.registros.where('synchronized').equals(0).toArray();
+    // SINCRONIZACIÓN DE SALIDA CORREGIDA
+async function intentarSincronizar() {
+    if(!navigator.onLine) return;
+    const pends = await db.registros.where('synchronized').equals(0).toArray();
+    
+    for(let r of pends) {
+        const f = new URLSearchParams();
         
-        for(let r of pends) {
-            const f = new URLSearchParams();
-            
-            // Mapeo manual para asegurar que Google Sheets reciba las columnas correctas[cite: 2]
-            f.append("TIPO REGISTRO", r.tipoRegistro);
-            f.append("DNI", r.dni);
-            f.append("APELLIDOS Y NOMBRES", r.nombres);
-            f.append("STATUS LLAMADA", r.contacto);
-            f.append("REGISTRO LLAMADA", r.fechaLlamada);
-            f.append("MOTIVO AUSENCIA", r.motivo);
-            f.append("VAS A REGRESAR", r.regresa);
-            f.append("FECHA RETORNO", r.fechaRetorno);
-            f.append("COMENTARIOS MEJORA", r.mejora);
-            f.append("OBSERVACIONES", r.observaciones);
+        // Mapeamos los datos para que coincidan con el doPost del script[cite: 2]
+        f.append("TIPO REGISTRO", r.tipoRegistro);
+        f.append("DNI", r.dni);
+        f.append("APELLIDOS Y NOMBRES", r.nombres);
+        f.append("SEXO", document.getElementById('sexo').value); // Enviamos los datos que faltaban
+        f.append("EDAD", document.getElementById('edad').value);
+        f.append("CELULAR", document.getElementById('celular').value);
+        f.append("FUNDO", document.getElementById('fundo').value);
+        f.append("AREA", document.getElementById('area').value);
+        f.append("CARGO", document.getElementById('cargo').value);
+        f.append("FECHA INGRESO", document.getElementById('fechaIngreso').value);
+        f.append("TIPO", document.getElementById('tipoTrabajador').value);
+        f.append("STATUS LLAMADA", r.contacto);
+        f.append("REGISTRO LLAMADA", r.fechaLlamada);
+        f.append("MOTIVO AUSENCIA", r.motivo);
+        f.append("VAS A REGRESAR", r.regresa);
+        f.append("FECHA RETORNO", r.fechaRetorno);
+        f.append("COMENTARIOS MEJORA", r.mejora);
+        f.append("OBSERVACIONES", r.observaciones);
 
-            try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
-                await db.registros.update(r.id, { synchronized: 1 });
-                console.log("Registro sincronizado con éxito");
-            } catch(e) { 
-                console.error("Error al enviar:", e); 
-            }
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: f });
+            await db.registros.update(r.id, { synchronized: 1 });
+        } catch(e) { 
+            console.error("Error al sincronizar:", e); 
         }
     }
-
+}
     window.addEventListener('online', () => {
         document.getElementById('networkStatus').className = "status-bar online";
         actualizarPadron(); intentarSincronizar();
