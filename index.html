@@ -117,7 +117,7 @@
 <script src="https://unpkg.com/dexie@3.2.0/dist/dexie.min.js"></script>
 <script>
     // REEMPLAZA ESTA URL POR LA TUYA
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyIRkC3BSZuwBmvTWce7-AednExm1GK-cQuNiv-Iwn2dPEerr49uwU90rZZZLJiLxxF0w/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyKQEQblfbxhnGOxkrFLx6AzKGUuVNJalseD2-TEQteeLl7675gQdY_tymVzebC6r47gg/exec';
 
     const db = new Dexie('BD_HUARMEY_FINAL');
     db.version(1).stores({
@@ -135,34 +135,28 @@
         document.getElementById('contenedorRetorno').style.display = (val === "SI") ? "block" : "none";
     }
 
- // BUSCAR DNI CORREGIDO
 async function buscarDNI() {
-    // Obtenemos el valor del input DNI
-    const dniInput = document.getElementById('dni').value.toString().trim();
-    if (!dniInput) return alert("Por favor, ingrese un DNI.");
+    const dniVal = document.getElementById('dni').value.toString().trim();
+    if (!dniVal) return alert("Por favor, ingrese un DNI");
 
-    // Buscamos en la base de datos local (Dexie)
-    const persona = await db.personal.get(dniInput);
+    // Buscamos en la base de datos local Dexie
+    const persona = await db.personal.get(dniVal);
 
     if (persona) {
-        // CORRECCIÓN: Usamos corchetes y mayúsculas exactas del Sheets[cite: 2]
-        // Mantenemos el operador || '' para evitar que se escriba "undefined" si la celda está vacía en Sheets.
-
+        // Mapeo exhaustivo con los nombres de columna de tu Google Sheets
         document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
         document.getElementById('sexo').value = persona["SEXO"] || '';
         document.getElementById('edad').value = persona["EDAD"] || '';
         document.getElementById('celular').value = persona["CELULAR"] || '';
         document.getElementById('fundo').value = persona["FUNDO"] || '';
-        document.getElementById('area').value = persona["AREA"] || ''; // Sin tilde como en la imagen[cite: 2]
+        document.getElementById('area').value = persona["AREA"] || '';
         document.getElementById('cargo').value = persona["CARGO"] || '';
         document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-
-        // Este es el único que funcionaba porque el nombre ya coincidía exactamente[cite: 5]
         document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-
-        console.log("Datos cargados exitosamente para:", dniInput);
+        
+        alert("Trabajador encontrado: " + (persona["APELLIDOS Y NOMBRES"] || ''));
     } else {
-        alert("DNI no encontrado localmente. Asegúrese de haber sincronizado el padrón.");
+        alert("DNI no encontrado en el padrón local. Asegúrese de estar conectado a internet para actualizar.");
     }
 }
 
@@ -210,35 +204,41 @@ async function buscarDNI() {
     };
 
     async function enviarASheets() {
-        if(!navigator.onLine) return;
-        const pends = await db.registros.where('synchronized').equals(0).toArray();
-        for(let r of pends) {
-            const fd = new URLSearchParams();
-            fd.append("tipoReg", r.tipoReg);
-            fd.append("dni", r.dni);
-            fd.append("nombres", r.nom);
-            fd.append("sexo", r.sex);
-            fd.append("edad", r.eda);
-            fd.append("celular", r.cel);
-            fd.append("fundo", r.fun);
-            fd.append("area", r.are);
-            fd.append("cargo", r.car);
-            fd.append("fIngreso", r.fIng);
-            fd.append("tipoT", r.tipT);
-            fd.append("contacto", r.cont);
-            fd.append("fLlamada", r.fLlam);
-            fd.append("motivo", r.mot);
-            fd.append("regresa", r.regre);
-            fd.append("fRetorno", r.fRet);
-            fd.append("mejora", r.mej);
-            fd.append("obs", r.obs);
+    if(!navigator.onLine) return;
+    const pends = await db.registros.where('synchronized').equals(0).toArray();
+    
+    for(let r of pends) {
+        const fd = new URLSearchParams();
+        // Estos nombres deben coincidir exactamente con los usados en el doPost del Apps Script
+        fd.append("tipoReg", r.tipoReg);
+        fd.append("dni", r.dni);
+        fd.append("nombres", r.nom);
+        fd.append("sexo", r.sex);
+        fd.append("edad", r.eda);
+        fd.append("celular", r.cel);
+        fd.append("fundo", r.fun);
+        fd.append("area", r.are);
+        fd.append("cargo", r.car);
+        fd.append("fIngreso", r.fIng);
+        fd.append("tipoT", r.tipT);
+        fd.append("contacto", r.cont);
+        fd.append("fLlamada", r.fLlam);
+        fd.append("motivo", r.mot);
+        fd.append("regresa", r.regre);
+        fd.append("fRetorno", r.fRet);
+        fd.append("mejora", r.mej);
+        fd.append("obs", r.obs);
 
-            try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: fd });
-                await db.registros.update(r.id, { synchronized: 1 });
-            } catch(e) { console.log(e); }
+        try {
+            // Usamos mode: 'no-cors' para evitar bloqueos del navegador al enviar datos a Google
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: fd });
+            await db.registros.update(r.id, { synchronized: 1 });
+            console.log("Registro sincronizado con éxito");
+        } catch(e) { 
+            console.error("Error en la sincronización:", e); 
         }
     }
+}
 
     actualizarPadron();
     setInterval(enviarASheets, 10000);
