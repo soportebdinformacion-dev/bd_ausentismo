@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agrícola Huarmey - Ausentismo</title>
     <style>
-        :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; }
+        :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; --naranja: #EF6C00; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris); margin: 0; padding: 15px; }
         .container { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid var(--rojo); }
         .logo { display: block; margin: 0 auto 10px; width: 150px; }
@@ -17,8 +17,12 @@
         input[readonly] { background: #f0f0f0; }
         .btn-search { background: var(--verde); color: white; border: none; padding: 12px; margin-top: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
         .btn-submit { background: var(--rojo); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .status-bar { text-align: center; padding: 8px; margin-top: 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
-        .online { background: #C8E6C9; color: #2E7D32; }
+        
+        /* Indicador de Conexión */
+        .status-bar { text-align: center; padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.3s; }
+        .online { background: #C8E6C9; color: #2E7D32; border: 1px solid #2E7D32; }
+        .offline { background: #FFCDD2; color: #C62828; border: 1px solid #C62828; }
+        
         #seccionPreguntas, #contenedorRetorno { display: none; }
     </style>
 </head>
@@ -28,10 +32,12 @@
     <img src="ICONO HUARMEY.png" class="logo" alt="Logo">
     <h2>Registro de Ausentismo - Campaña 2026</h2>
 
+    <div id="connectionStatus" class="status-bar online">Detectando conexión...</div>
+
     <form id="formAusentismo">
         <fieldset>
             <legend>1. INFORMACIÓN PERSONAL</legend>
-            <label>Registro de usuario:</label>
+            <label>Tipo de registro:</label>
             <select id="tipoRegistro" required>
                 <option value="">Seleccione usuario...</option>
                 <option value="JOSE CHAVEZ">JOSE CHAVEZ</option>
@@ -111,19 +117,35 @@
 
         <button type="submit" class="btn-submit">GUARDAR Y ENVIAR</button>
     </form>
-    <div id="status" class="status-bar online">Sincronizando padrón...</div>
 </div>
 
 <script src="https://unpkg.com/dexie@3.2.0/dist/dexie.min.js"></script>
 <script>
-    // REEMPLAZA ESTA URL POR LA TUYA
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyKQEQblfbxhnGOxkrFLx6AzKGUuVNJalseD2-TEQteeLl7675gQdY_tymVzebC6r47gg/exec';
+    // URL DE TU APPS SCRIPT
+    const API_URL = 'https://script.google.com/macros/s/AKfycbz1Aj5OndaOy3qr2EpXXu4HtlKU-R2YesXpbOHJtVzAbjQtERG43IPUdGiGM9ZuHQvasw/exec';
 
     const db = new Dexie('BD_HUARMEY_FINAL');
     db.version(1).stores({
         personal: 'DNI',
         registros: '++id, synchronized'
     });
+
+    // Función para actualizar el indicador de internet
+    function actualizarIndicadorConexion() {
+        const statusDiv = document.getElementById('connectionStatus');
+        if (navigator.onLine) {
+            statusDiv.innerText = "🟢 CONECTADO (En línea)";
+            statusDiv.className = "status-bar online";
+            enviarASheets(); // Intenta enviar datos pendientes al recuperar conexión
+        } else {
+            statusDiv.innerText = "🔴 SIN CONEXIÓN (Modo Local)";
+            statusDiv.className = "status-bar offline";
+        }
+    }
+
+    window.addEventListener('online', actualizarIndicadorConexion);
+    window.addEventListener('offline', actualizarIndicadorConexion);
+    actualizarIndicadorConexion();
 
     function toggleSeccionPreguntas() {
         const val = document.getElementById('contacto').value;
@@ -135,30 +157,24 @@
         document.getElementById('contenedorRetorno').style.display = (val === "SI") ? "block" : "none";
     }
 
-async function buscarDNI() {
-    const dniVal = document.getElementById('dni').value.toString().trim();
-    if (!dniVal) return alert("Por favor, ingrese un DNI");
+    async function buscarDNI() {
+        const dniVal = document.getElementById('dni').value.toString().trim();
+        const persona = await db.personal.get(dniVal);
 
-    // Buscamos en la base de datos local Dexie
-    const persona = await db.personal.get(dniVal);
-
-    if (persona) {
-        // Mapeo exhaustivo con los nombres de columna de tu Google Sheets
-        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-        document.getElementById('sexo').value = persona["SEXO"] || '';
-        document.getElementById('edad').value = persona["EDAD"] || '';
-        document.getElementById('celular').value = persona["CELULAR"] || '';
-        document.getElementById('fundo').value = persona["FUNDO"] || '';
-        document.getElementById('area').value = persona["AREA"] || '';
-        document.getElementById('cargo').value = persona["CARGO"] || '';
-        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-        
-        alert("Trabajador encontrado: " + (persona["APELLIDOS Y NOMBRES"] || ''));
-    } else {
-        alert("DNI no encontrado en el padrón local. Asegúrese de estar conectado a internet para actualizar.");
+        if (persona) {
+            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+            document.getElementById('sexo').value = persona["SEXO"] || '';
+            document.getElementById('edad').value = persona["EDAD"] || '';
+            document.getElementById('celular').value = persona["CELULAR"] || '';
+            document.getElementById('fundo').value = persona["FUNDO"] || '';
+            document.getElementById('area').value = persona["AREA"] || '';
+            document.getElementById('cargo').value = persona["CARGO"] || '';
+            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+        } else {
+            alert("DNI no encontrado en el padrón local.");
+        }
     }
-}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
@@ -169,9 +185,8 @@ async function buscarDNI() {
                 await db.personal.clear();
                 const dataClean = data.map(p => ({ ...p, DNI: String(p.DNI).trim() }));
                 await db.personal.bulkPut(dataClean);
-                document.getElementById('status').innerText = "Sistema en Línea - Padrón Actualizado";
             }
-        } catch (e) { console.log(e); }
+        } catch (e) { console.log("Error al actualizar padrón:", e); }
     }
 
     document.getElementById('formAusentismo').onsubmit = async (e) => {
@@ -197,51 +212,61 @@ async function buscarDNI() {
             obs: document.getElementById('observaciones').value,
             synchronized: 0
         };
+
         await db.registros.add(registro);
-        alert("Guardado localmente. Sincronizando...");
+        
+        if (navigator.onLine) {
+            alert("✅ Registro guardado. Enviando a Google Sheets...");
+            enviarASheets();
+        } else {
+            alert("⚠️ Sin conexión. El registro se guardó localmente y se enviará automáticamente al recuperar internet.");
+        }
+        
         document.getElementById('formAusentismo').reset();
-        enviarASheets();
+        document.getElementById('seccionPreguntas').style.display = "none";
+        document.getElementById('contenedorRetorno').style.display = "none";
     };
 
     async function enviarASheets() {
-    if(!navigator.onLine) return;
-    const pends = await db.registros.where('synchronized').equals(0).toArray();
-    
-    for(let r of pends) {
-        const fd = new URLSearchParams();
-        // Estos nombres deben coincidir exactamente con los usados en el doPost del Apps Script
-        fd.append("tipoReg", r.tipoReg);
-        fd.append("dni", r.dni);
-        fd.append("nombres", r.nom);
-        fd.append("sexo", r.sex);
-        fd.append("edad", r.eda);
-        fd.append("celular", r.cel);
-        fd.append("fundo", r.fun);
-        fd.append("area", r.are);
-        fd.append("cargo", r.car);
-        fd.append("fIngreso", r.fIng);
-        fd.append("tipoT", r.tipT);
-        fd.append("contacto", r.cont);
-        fd.append("fLlamada", r.fLlam);
-        fd.append("motivo", r.mot);
-        fd.append("regresa", r.regre);
-        fd.append("fRetorno", r.fRet);
-        fd.append("mejora", r.mej);
-        fd.append("obs", r.obs);
+        if(!navigator.onLine) return;
+        
+        const pendientes = await db.registros.where('synchronized').equals(0).toArray();
+        if (pendientes.length === 0) return;
 
-        try {
-            // Usamos mode: 'no-cors' para evitar bloqueos del navegador al enviar datos a Google
-            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: fd });
-            await db.registros.update(r.id, { synchronized: 1 });
-            console.log("Registro sincronizado con éxito");
-        } catch(e) { 
-            console.error("Error en la sincronización:", e); 
+        for(let r of pendientes) {
+            const fd = new URLSearchParams();
+            fd.append("tipoReg", r.tipoReg);
+            fd.append("dni", r.dni);
+            fd.append("nombres", r.nom);
+            fd.append("sexo", r.sex);
+            fd.append("edad", r.eda);
+            fd.append("celular", r.cel);
+            fd.append("fundo", r.fun);
+            fd.append("area", r.are);
+            fd.append("cargo", r.car);
+            fd.append("fIngreso", r.fIng);
+            fd.append("tipoT", r.tipT);
+            fd.append("contacto", r.cont);
+            fd.append("fLlamada", r.fLlam);
+            fd.append("motivo", r.mot);
+            fd.append("regresa", r.regre);
+            fd.append("fRetorno", r.fRet);
+            fd.append("mejora", r.mej);
+            fd.append("obs", r.obs);
+
+            try {
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: fd });
+                await db.registros.update(r.id, { synchronized: 1 });
+                console.log("Registro " + r.id + " sincronizado correctamente.");
+            } catch(e) { 
+                console.log("Error al sincronizar registro " + r.id, e); 
+            }
         }
     }
-}
 
     actualizarPadron();
-    setInterval(enviarASheets, 10000);
+    // Reintento automático de sincronización cada 30 segundos
+    setInterval(enviarASheets, 30000);
 </script>
 </body>
 </html>
