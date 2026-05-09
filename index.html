@@ -85,6 +85,8 @@
                 <option value="SI">SI</option>
                 <option value="NO">NO</option>
                 <option value="NUMERO APAGADO">NUMERO APAGADO</option>
+                <option value="NUMERO EQUIVOCADO">NUMERO EQUIVOCADO</option>
+                <option value="NUMERO NO VALIDO">NUMERO NO VALIDO</option>
                 <option value="NO RESPONDE">NO RESPONDE</option>
             </select>
 
@@ -94,8 +96,21 @@
                 <label>Motivo de ausencia:</label>
                 <select id="motivo">
                     <option value="Ninguno">Ninguno</option>
-                    <option value="Salud">Salud</option>
-                    <option value="Familiar">Familiar</option>
+                    <option value="Problemas personales">Problemas personales</option>
+                    <option value="Problemas familiares">Problemas familiares</option>
+                    <option value="Transporte (Especifique en OBSERVACIONES)">Transporte (Especifique en OBSERVACIONES)</option>
+                    <option value="Otro trabajo (Especifique en OBSERVACIONES)">Otro trabajo (Especifique en OBSERVACIONES)</option>
+                    <option value="Desmotivación (Especifique en OBSERVACIONES)">Desmotivación (Especifique en OBSERVACIONES)</option>
+                    <option value="Estudios (Especifique en OBSERVACIONES)">Estudios (Especifique en OBSERVACIONES)</option>
+                    <option value="Problemas con el Caporal/Supervisor (Escriba sus datos en OBSERVACIONES)">Problemas con el Caporal/Supervisor (Escriba sus datos en OBSERVACIONES)</option>
+                    <option value="Viaje">Viaje</option>
+                    <option value="Accidente">Accidente</option>
+                    <option value="Sacar tarjeta">Sacar tarjeta</option>
+                    <option value="pagos (Especifique en OBSERVACIONES)">pagos (Especifique en OBSERVACIONES)</option>
+                    <option value="Horarios">Horarios</option>
+                    <option value="Alimentación (Especifique en OBSERVACIONES)">Alimentación (Especifique en OBSERVACIONES)</option>
+                    <option value="Campamento (Especifique en OBSERVACIONES)">Campamento (Especifique en OBSERVACIONES)</option>
+                    <option value="No desea continuar (Especifique en OBSERVACAIONES)">No desea continuar (Especifique en OBSERVACAIONES)</option>
                     <option value="Otros">Otros</option>
                 </select>
 
@@ -111,11 +126,11 @@
                     <input type="date" id="fechaRetornoInput">
                 </div>
 
-                <label>Mejoras empresa:</label>
+                <label>¿Qué tendria que mejorar la empresa para que regreses:</label>
                 <textarea id="mejora" rows="2"></textarea>
             </div>
 
-            <label>Observaciones:</label>
+            <label>OBSERVACIONES:</label>
             <textarea id="observaciones" rows="2"></textarea>
         </fieldset>
 
