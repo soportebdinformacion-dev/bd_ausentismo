@@ -48,7 +48,11 @@
             </select>
 
             <label>DNI:</label>
-            <input type="number" id="dni" required placeholder="Ingrese DNI">
+                <input type="text" id="dni" 
+                placeholder="Ingrese 8 dígitos" 
+                maxlength="8" 
+                oninput="this.value = this.value.replace(/[^0-9]/g, '');" 
+                required>
             <button type="button" class="btn-search" onclick="buscarDNI()">🔍 BUSCAR TRABAJADOR</button>
 
             <label>Apellidos y nombres:</label>
@@ -158,23 +162,44 @@
     }
 
     async function buscarDNI() {
-        const dniVal = document.getElementById('dni').value.toString().trim();
-        const persona = await db.personal.get(dniVal);
+    const dniInput = document.getElementById('dni');
+    const dniVal = dniInput.value.trim();
 
-        if (persona) {
-            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-            document.getElementById('sexo').value = persona["SEXO"] || '';
-            document.getElementById('edad').value = persona["EDAD"] || '';
-            document.getElementById('celular').value = persona["CELULAR"] || '';
-            document.getElementById('fundo').value = persona["FUNDO"] || '';
-            document.getElementById('area').value = persona["AREA"] || '';
-            document.getElementById('cargo').value = persona["CARGO"] || '';
-            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-        } else {
-            alert("DNI no encontrado en el padrón local.");
-        }
+    // 1. Validar que tenga exactamente 8 dígitos
+    if (dniVal.length !== 8) {
+        alert("⚠️ Error de escritura: El DNI debe tener exactamente 8 números.");
+        dniInput.focus();
+        return;
     }
+
+    // 2. Validar que sea numérico (aunque oninput ya lo filtra, es doble seguridad)
+    if (!/^\d+$/.test(dniVal)) {
+        alert("⚠️ Error: Solo se permiten caracteres numéricos.");
+        return;
+    }
+
+    // 3. Realizar la búsqueda en la base de datos local (Dexie)
+    const persona = await db.personal.get(dniVal);
+
+    if (persona) {
+        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+        document.getElementById('sexo').value = persona["SEXO"] || '';
+        document.getElementById('edad').value = persona["EDAD"] || '';
+        document.getElementById('celular').value = persona["CELULAR"] || '';
+        document.getElementById('fundo').value = persona["FUNDO"] || '';
+        document.getElementById('area').value = persona["AREA"] || '';
+        document.getElementById('cargo').value = persona["CARGO"] || '';
+        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+        
+        alert("✅ Trabajador encontrado con éxito.");
+    } else {
+        alert("❌ El DNI " + dniVal + " no se encuentra registrado en el padrón local.");
+        // Opcional: Limpiar campos si no se encuentra
+        document.getElementById('formAusentismo').reset();
+        document.getElementById('dni').value = dniVal; 
+    }
+}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
