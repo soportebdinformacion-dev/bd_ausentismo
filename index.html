@@ -8,7 +8,15 @@
         :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; --naranja: #EF6C00; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris); margin: 0; padding: 15px; }
         .container { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid var(--rojo); }
-        .logo { display: block; margin: 0 auto 10px; width: 150px; }
+        /* Busca esto en la sección de CSS (dentro de <style>) */
+.logo { 
+    display: block; 
+    margin: 0 auto 15px; 
+    width: 100%;       /* Cambia el ancho fijo por 100% */
+    max-width: 100%;   
+    height: auto;      
+    border-radius: 8px; 
+}
         h2 { color: var(--verde); text-align: center; font-size: 1.1rem; margin-bottom: 15px; }
         fieldset { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; padding: 12px; }
         legend { font-weight: bold; color: var(--rojo); padding: 0 8px; font-size: 13px; }
@@ -29,7 +37,7 @@
 <body>
 
 <div class="container">
-    <img src="FLYER BIENVENIDA FRUSAN.png" class="logo" alt="Agrícola Huarmey">
+   <img src="FLYER BIENVENIDA FRUSAN.png" class="logo" alt="Logo">
     <h2>Registro de Ausentismo - Campaña 2026</h2>
 
     <div id="connectionStatus" class="status-bar online">Detectando conexión...</div>
