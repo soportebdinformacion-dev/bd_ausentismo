@@ -5,18 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agrícola Huarmey - Ausentismo</title>
     <style>
-        :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; --naranja: #EF6C00; }
+        :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; --naranja: #EF6C00; --azul: #1976D2; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--gris); margin: 0; padding: 15px; }
-        .container { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid var(--rojo); }
-        /* Busca esto en la sección de CSS (dentro de <style>) */
-.logo { 
-    display: block; 
-    margin: 0 auto 15px; 
-    width: 100%;       /* Cambia el ancho fijo por 100% */
-    max-width: 100%;   
-    height: auto;      
-    border-radius: 8px; 
-}
+        
+        /* ACOPLE A PANTALLA (PC y Celular) */
+        .container { 
+            background: white; 
+            width: 95%; 
+            max-width: 500px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            border-top: 6px solid var(--rojo); 
+        }
+
+        .logo { display: block; margin: 0 auto 15px; width: 100%; max-width: 100%; height: auto; border-radius: 8px; }
         h2 { color: var(--verde); text-align: center; font-size: 1.1rem; margin-bottom: 15px; }
         fieldset { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; padding: 12px; }
         legend { font-weight: bold; color: var(--rojo); padding: 0 8px; font-size: 13px; }
@@ -26,7 +30,19 @@
         .btn-search { background: var(--verde); color: white; border: none; padding: 12px; margin-top: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
         .btn-submit { background: var(--rojo); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         
-        /* Indicador de Conexión */
+        /* BOTÓN DESCARGA ADMIN */
+        .btn-download { background: var(--azul); color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; margin-top: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        /* NOTIFICACIONES TEMPORALES */
+        #notificacion { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+            z-index: 1000; width: 80%; max-width: 400px; padding: 15px; 
+            border-radius: 8px; text-align: center; font-weight: bold; 
+            display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+
         .status-bar { text-align: center; padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.3s; }
         .online { background: #C8E6C9; color: #2E7D32; border: 1px solid #2E7D32; }
         .offline { background: #FFCDD2; color: #C62828; border: 1px solid #C62828; }
@@ -35,6 +51,8 @@
     </style>
 </head>
 <body>
+
+<div id="notificacion"></div>
 
 <div class="container">
    <img src="FLYER BIENVENIDA FRUSAN.png" class="logo" alt="Logo">
@@ -56,11 +74,7 @@
             </select>
 
             <label>DNI:</label>
-                <input type="text" id="dni" 
-                placeholder="Ingrese 8 dígitos" 
-                maxlength="8" 
-                oninput="this.value = this.value.replace(/[^0-9]/g, '');" 
-                required>
+            <input type="text" id="dni" placeholder="Ingrese 8 dígitos" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
             <button type="button" class="btn-search" onclick="buscarDNI()">🔍 BUSCAR TRABAJADOR</button>
 
             <label>Apellidos y nombres:</label>
@@ -144,12 +158,13 @@
         </fieldset>
 
         <button type="submit" class="btn-submit">GUARDAR Y ENVIAR</button>
+        
+        <button type="button" class="btn-download" onclick="descargarApp()">📥 DOWNLOAD APP (ADMIN)</button>
     </form>
 </div>
 
 <script src="https://unpkg.com/dexie@3.2.0/dist/dexie.min.js"></script>
 <script>
-    // URL DE TU APPS SCRIPT
     const API_URL = 'https://script.google.com/macros/s/AKfycbyKQEQblfbxhnGOxkrFLx6AzKGUuVNJalseD2-TEQteeLl7675gQdY_tymVzebC6r47gg/exec';
 
     const db = new Dexie('BD_HUARMEY_FINAL');
@@ -158,13 +173,22 @@
         registros: '++id, synchronized'
     });
 
-    // Función para actualizar el indicador de internet
+    // Función para mostrar mensajes por 30 segundos
+    function mostrarMensaje(texto, color) {
+        const div = document.getElementById('notificacion');
+        div.innerText = texto;
+        div.style.backgroundColor = color === 'verde' ? '#C8E6C9' : '#FFCDD2';
+        div.style.color = color === 'verde' ? '#2E7D32' : '#C62828';
+        div.style.display = 'block';
+        setTimeout(() => { div.style.display = 'none'; }, 30000);
+    }
+
     function actualizarIndicadorConexion() {
         const statusDiv = document.getElementById('connectionStatus');
         if (navigator.onLine) {
             statusDiv.innerText = "🟢 CONECTADO (En línea)";
             statusDiv.className = "status-bar online";
-            enviarASheets(); // Intenta enviar datos pendientes al recuperar conexión
+            enviarASheets();
         } else {
             statusDiv.innerText = "🔴 SIN CONEXIÓN (Modo Local)";
             statusDiv.className = "status-bar offline";
@@ -186,44 +210,25 @@
     }
 
     async function buscarDNI() {
-    const dniInput = document.getElementById('dni');
-    const dniVal = dniInput.value.trim();
-
-    // 1. Validar que tenga exactamente 8 dígitos
-    if (dniVal.length !== 8) {
-        alert("⚠️ Error de escritura: El DNI debe tener exactamente 8 números.");
-        dniInput.focus();
-        return;
+        const dniInput = document.getElementById('dni');
+        const dniVal = dniInput.value.trim();
+        if (dniVal.length !== 8) { mostrarMensaje("⚠️ El DNI debe tener 8 dígitos.", "rojo"); return; }
+        const persona = await db.personal.get(dniVal);
+        if (persona) {
+            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+            document.getElementById('sexo').value = persona["SEXO"] || '';
+            document.getElementById('edad').value = persona["EDAD"] || '';
+            document.getElementById('celular').value = persona["CELULAR"] || '';
+            document.getElementById('fundo').value = persona["FUNDO"] || '';
+            document.getElementById('area').value = persona["AREA"] || '';
+            document.getElementById('cargo').value = persona["CARGO"] || '';
+            document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
+            document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+            mostrarMensaje("✅ Trabajador encontrado.", "verde");
+        } else {
+            mostrarMensaje("❌ DNI no encontrado en el padrón local.", "rojo");
+        }
     }
-
-    // 2. Validar que sea numérico (aunque oninput ya lo filtra, es doble seguridad)
-    if (!/^\d+$/.test(dniVal)) {
-        alert("⚠️ Error: Solo se permiten caracteres numéricos.");
-        return;
-    }
-
-    // 3. Realizar la búsqueda en la base de datos local (Dexie)
-    const persona = await db.personal.get(dniVal);
-
-    if (persona) {
-        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-        document.getElementById('sexo').value = persona["SEXO"] || '';
-        document.getElementById('edad').value = persona["EDAD"] || '';
-        document.getElementById('celular').value = persona["CELULAR"] || '';
-        document.getElementById('fundo').value = persona["FUNDO"] || '';
-        document.getElementById('area').value = persona["AREA"] || '';
-        document.getElementById('cargo').value = persona["CARGO"] || '';
-        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
-        
-        alert("✅ Trabajador encontrado con éxito.");
-    } else {
-        alert("❌ El DNI " + dniVal + " no se encuentra registrado en el padrón local.");
-        // Opcional: Limpiar campos si no se encuentra
-        document.getElementById('formAusentismo').reset();
-        document.getElementById('dni').value = dniVal; 
-    }
-}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
@@ -265,10 +270,10 @@
         await db.registros.add(registro);
         
         if (navigator.onLine) {
-            alert("✅ Registro guardado. Enviando a Google Sheets...");
+            mostrarMensaje("✅ Registro guardado y enviando a la nube...", "verde");
             enviarASheets();
         } else {
-            alert("⚠️ Sin conexión. El registro se guardó localmente y se enviará automáticamente al recuperar internet.");
+            mostrarMensaje("⚠️ Guardado localmente. Se enviará al detectar internet.", "rojo");
         }
         
         document.getElementById('formAusentismo').reset();
@@ -278,43 +283,32 @@
 
     async function enviarASheets() {
         if(!navigator.onLine) return;
-        
         const pendientes = await db.registros.where('synchronized').equals(0).toArray();
-        if (pendientes.length === 0) return;
-
         for(let r of pendientes) {
             const fd = new URLSearchParams();
-            fd.append("tipoReg", r.tipoReg);
-            fd.append("dni", r.dni);
-            fd.append("nombres", r.nom);
-            fd.append("sexo", r.sex);
-            fd.append("edad", r.eda);
-            fd.append("celular", r.cel);
-            fd.append("fundo", r.fun);
-            fd.append("area", r.are);
-            fd.append("cargo", r.car);
-            fd.append("fIngreso", r.fIng);
-            fd.append("tipoT", r.tipT);
-            fd.append("contacto", r.cont);
-            fd.append("fLlamada", r.fLlam);
-            fd.append("motivo", r.mot);
-            fd.append("regresa", r.regre);
-            fd.append("fRetorno", r.fRet);
-            fd.append("mejora", r.mej);
-            fd.append("obs", r.obs);
-
+            Object.keys(r).forEach(key => { if(key !== 'id' && key !== 'synchronized') fd.append(key, r[key]); });
             try {
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: fd });
                 await db.registros.update(r.id, { synchronized: 1 });
-                console.log("Registro " + r.id + " sincronizado correctamente.");
-            } catch(e) { 
-                console.log("Error al sincronizar registro " + r.id, e); 
-            }
+            } catch(e) { console.log("Error sincronización", e); }
         }
     }
 
+    // FUNCIÓN PARA DESCARGAR LA APP
+    function descargarApp() {
+        const codigoHtml = document.documentElement.outerHTML;
+        const blob = new Blob([codigoHtml], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Encuentas.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
     actualizarPadron();
-    // Reintento automático de sincronización cada 30 segundos
     setInterval(enviarASheets, 30000);
 </script>
 </body>
