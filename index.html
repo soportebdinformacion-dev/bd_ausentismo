@@ -5,34 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agrícola Huarmey - Ausentismo</title>
     <style>
-        :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; --naranja: #EF6C00; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--gris); margin: 0; padding: 15px; }
-        .container { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid var(--rojo); }
-        /* Busca esto en la sección de CSS (dentro de <style>) */
-.logo { 
-    display: block; 
-    margin: 0 auto 15px; 
-    width: 100%;       /* Cambia el ancho fijo por 100% */
-    max-width: 100%;   
-    height: auto;      
-    border-radius: 8px; 
-}
-        h2 { color: var(--verde); text-align: center; font-size: 1.1rem; margin-bottom: 15px; }
-        fieldset { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; padding: 12px; }
+        :root { 
+            --rojo: #D32F2F; 
+            --verde: #2E7D32; 
+            --gris: #f4f4f4; 
+            --naranja: #EF6C00; 
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--gris); 
+            margin: 0; 
+            padding: 10px; 
+        }
+
+        .container { 
+            background: white; 
+            width: 95%;           /* Ocupa casi todo el ancho en móviles */
+            max-width: 850px;     /* Ancho optimizado para 2 columnas en PC */
+            margin: 10px auto; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            border-top: 6px solid var(--rojo); 
+            box-sizing: border-box; 
+        }
+
+        .logo { 
+            display: block; 
+            margin: 0 auto 15px; 
+            width: 100%;
+            max-width: 100%;   
+            height: auto;      
+            border-radius: 8px; 
+        }
+
+        h2 { color: var(--verde); text-align: center; font-size: 1.2rem; margin-bottom: 15px; }
+        
+        fieldset { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; padding: 15px; }
         legend { font-weight: bold; color: var(--rojo); padding: 0 8px; font-size: 13px; }
         label { display: block; margin-top: 10px; font-weight: 600; font-size: 13px; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        
+        input, select, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            margin-top: 4px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+        }
+        
         input[readonly] { background: #f0f0f0; }
+
+        /* Contenedor flexible para el diseño de columnas */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr; /* 1 columna por defecto (Móvil) */
+            gap: 10px 20px;
+        }
+
+        .full-width { grid-column: 1 / -1; } /* Fuerza a ocupar todo el ancho */
+
         .btn-search { background: var(--verde); color: white; border: none; padding: 12px; margin-top: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
         .btn-submit { background: var(--rojo); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         
-        /* Indicador de Conexión */
         .status-bar { text-align: center; padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.3s; }
         .online { background: #C8E6C9; color: #2E7D32; border: 1px solid #2E7D32; }
         .offline { background: #FFCDD2; color: #C62828; border: 1px solid #C62828; }
-        
-        #seccionPreguntas, #contenedorRetorno { display: none; }
+
+        /* --- AJUSTES PARA PC (Pantallas mayores a 768px) --- */
+        @media (min-width: 768px) {
+            body { padding: 30px; }
+            .container { padding: 40px; }
+            .grid-container { grid-template-columns: 1fr 1fr; } /* 2 columnas en PC */
+        }
     </style>
+
 </head>
 <body>
 
