@@ -5,62 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agrícola Huarmey - Ausentismo</title>
     <style>
-    :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; --naranja: #EF6C00; }
-    
-    body { 
-        font-family: 'Segoe UI', sans-serif; 
-        background: var(--gris); 
-        margin: 0; 
-        padding: 10px; /* Reducido para móviles */
-    }
-
-    .container { 
-        background: white; 
-        width: 95%;           /* Ocupa casi todo el ancho en móviles */
-        max-width: 600px;      /* Un poco más ancho para PC para mejor lectura */
-        margin: 20px auto; 
-        padding: 20px; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-        border-top: 6px solid var(--rojo); 
-        box-sizing: border-box; /* Evita que el padding desborde el ancho */
-    }
-
-    /* Ajuste del Logo para que nunca se deforme */
-    .logo { 
-        display: block; 
-        margin: 0 auto 15px; 
-        width: 100%;       
-        max-width: 300px;    /* Limita el tamaño del logo en PC para que no sea gigante */
-        height: auto;      
-        border-radius: 8px; 
-    }
-
-    /* Ajuste de inputs para que no se salgan del cuadro en móviles */
-    input, select, textarea { 
-        width: 100%; 
-        padding: 12px; /* Más fácil de tocar en celular */
-        margin-top: 5px; 
-        border: 1px solid #ccc; 
-        border-radius: 6px; 
-        box-sizing: border-box; 
-        font-size: 16px; /* Evita el zoom automático en iPhone al hacer focus */
-    }
-
-    /* Media Query para pantallas pequeñas */
-    @media (max-width: 400px) {
-        .container {
-            padding: 15px;
-            margin: 10px auto;
-        }
+        :root { --rojo: #D32F2F; --verde: #2E7D32; --gris: #f4f4f4; --naranja: #EF6C00; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--gris); margin: 0; padding: 15px; }
+        .container { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid var(--rojo); }
+        /* Busca esto en la sección de CSS (dentro de <style>) */
+.logo { 
+    display: block; 
+    margin: 0 auto 15px; 
+    width: 100%;       /* Cambia el ancho fijo por 100% */
+    max-width: 100%;   
+    height: auto;      
+    border-radius: 8px; 
+}
+        h2 { color: var(--verde); text-align: center; font-size: 1.1rem; margin-bottom: 15px; }
+        fieldset { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; padding: 12px; }
+        legend { font-weight: bold; color: var(--rojo); padding: 0 8px; font-size: 13px; }
+        label { display: block; margin-top: 10px; font-weight: 600; font-size: 13px; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        input[readonly] { background: #f0f0f0; }
+        .btn-search { background: var(--verde); color: white; border: none; padding: 12px; margin-top: 8px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; }
+        .btn-submit { background: var(--rojo); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         
-        /* En celulares pequeños, Sexo y Edad se ponen uno abajo del otro */
-        div[style*="display:flex"] {
-            flex-direction: column;
-            gap: 0 !important;
-        }
-    }
-</style>
+        /* Indicador de Conexión */
+        .status-bar { text-align: center; padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.3s; }
+        .online { background: #C8E6C9; color: #2E7D32; border: 1px solid #2E7D32; }
+        .offline { background: #FFCDD2; color: #C62828; border: 1px solid #C62828; }
+        
+        #seccionPreguntas, #contenedorRetorno { display: none; }
+    </style>
 </head>
 <body>
 
@@ -293,7 +265,7 @@
         await db.registros.add(registro);
         
         if (navigator.onLine) {
-            alert("✅ REGISTRO GUARDADO. SE ENVIA A LA BASE DATOS DE GOOGLE SHEETS...");
+            alert("✅ Registro guardado. Enviando a Google Sheets...");
             enviarASheets();
         } else {
             alert("⚠️ Sin conexión. El registro se guardó localmente y se enviará automáticamente al recuperar internet.");
