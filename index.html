@@ -235,44 +235,46 @@
     }
 
     async function buscarDNI() {
-    const dniInput = document.getElementById('dni');
-    const dniVal = dniInput.value.trim();
+        const dniInput = document.getElementById('dni');
+        let dniVal = dniInput.value.trim();
 
-    // 1. Validar que tenga exactamente 8 dígitos
-    if (dniVal.length !== 8) {
-        alert("⚠️ Error de escritura: El DNI debe tener exactamente 8 números.");
-        dniInput.focus();
-        return;
+        if (!dniVal) {
+            alert("⚠️ Por favor, ingrese un número de DNI.");
+            dniInput.focus();
+            return;
+        }
+
+        // Validar que sea numérico
+        if (!/^\d+$/.test(dniVal)) {
+            alert("⚠️ Error: Solo se permiten caracteres numéricos.");
+            return;
+        }
+
+        // Rellenar con ceros a la izquierda si tiene menos de 8 dígitos
+        dniVal = dniVal.padStart(8, '0');
+        dniInput.value = dniVal;
+
+        // Realizar la búsqueda en la base de datos local (Dexie)
+        const persona = await db.personal.get(dniVal);
+
+        if (persona) {
+            document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
+            document.getElementById('sexo').value = persona["SEXO"] || '';
+            document.getElementById('modalidad').value = persona["MODALIDAD"] || '';
+            document.getElementById('celular').value = persona["CELULAR"] || '';
+            document.getElementById('placa').value = persona["PLACA"] || '';
+            document.getElementById('origen').value = persona["ORIGEN"] || '';
+            document.getElementById('cargo').value = persona["CARGO"] || '';
+            document.getElementById('fechaFalta').value = persona["FECHA_FALTA"] || '';
+            document.getElementById('historico').value = persona["HISTORICO"] || '';
+            
+            alert("✅ Trabajador encontrado con éxito.");
+        } else {
+            alert("❌ El DNI " + dniVal + " no se encuentra registrado en el padrón local.");
+            document.getElementById('formAusentismo').reset();
+            document.getElementById('dni').value = dniVal; 
+        }
     }
-
-    // 2. Validar que sea numérico (aunque oninput ya lo filtra, es doble seguridad)
-    if (!/^\d+$/.test(dniVal)) {
-        alert("⚠️ Error: Solo se permiten caracteres numéricos.");
-        return;
-    }
-
-    // 3. Realizar la búsqueda en la base de datos local (Dexie)
-    const persona = await db.personal.get(dniVal);
-
-    if (persona) {
-        document.getElementById('nombres').value = persona["APELLIDOS Y NOMBRES"] || '';
-        document.getElementById('sexo').value = persona["SEXO"] || '';
-        document.getElementById('modalidad').value = persona["MODALIDAD"] || '';
-        document.getElementById('celular').value = persona["CELULAR"] || '';
-        document.getElementById('placa').value = persona["PLACA"] || '';
-        document.getElementById('origen').value = persona["ORIGEN"] || '';
-        document.getElementById('cargo').value = persona["CARGO"] || '';
-        document.getElementById('fechaFalta').value = persona["FECHA_FALTA"] || '';
-        document.getElementById('historico').value = persona["HISTORICO"] || '';
-        
-        alert("✅ Trabajador encontrado con éxito.");
-    } else {
-        alert("❌ El DNI " + dniVal + " no se encuentra registrado en el padrón local.");
-        // Opcional: Limpiar campos si no se encuentra
-        document.getElementById('formAusentismo').reset();
-        document.getElementById('dni').value = dniVal; 
-    }
-}
 
     async function actualizarPadron() {
         if (!navigator.onLine) return;
@@ -281,7 +283,11 @@
             const data = await res.json();
             if (data && data.length > 0) {
                 await db.personal.clear();
-                const dataClean = data.map(p => ({ ...p, DNI: String(p.DNI).trim() }));
+                // Formatear DNI a 8 dígitos asegurando los ceros a la izquierda
+                const dataClean = data.map(p => ({ 
+                    ...p, 
+                    DNI: String(p.DNI || '').trim().padStart(8, '0') 
+                }));
                 await db.personal.bulkPut(dataClean);
             }
         } catch (e) { console.log("Error al actualizar padrón:", e); }
@@ -289,9 +295,11 @@
 
     document.getElementById('formAusentismo').onsubmit = async (e) => {
         e.preventDefault();
+        const dniFormateado = document.getElementById('dni').value.trim().padStart(8, '0');
+        
         const registro = {
             tipoReg: document.getElementById('tipoRegistro').value,
-            dni: document.getElementById('dni').value,
+            dni: dniFormateado,
             nom: document.getElementById('nombres').value,
             sex: document.getElementById('sexo').value,
             eda: document.getElementById('modalidad').value,
@@ -337,13 +345,13 @@
             fd.append("dni", r.dni);
             fd.append("nombres", r.nom);
             fd.append("sexo", r.sex);
-            fd.append("modalidad", r.moda);
+            fd.append("modalidad", r.eda);
             fd.append("celular", r.cel);
-            fd.append("placa", r.plac);
-            fd.append("origen", r.ori);
+            fd.append("placa", r.fun);
+            fd.append("origen", r.are);
             fd.append("cargo", r.car);
-            fd.append("fechaFalta", r.ffal);
-            fd.append("historico", r.hist);
+            fd.append("falta", r.fIng);
+            fd.append("historico", r.tipT);
             fd.append("contacto", r.cont);
             fd.append("fLlamada", r.fLlam);
             fd.append("motivo", r.mot);
