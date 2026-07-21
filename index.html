@@ -259,11 +259,11 @@
         document.getElementById('sexo').value = persona["SEXO"] || '';
         document.getElementById('edad').value = persona["EDAD"] || '';
         document.getElementById('celular').value = persona["CELULAR"] || '';
-        document.getElementById('fundo').value = persona["FUNDO"] || '';
-        document.getElementById('area').value = persona["AREA"] || '';
+        document.getElementById('placa').value = persona["PLACA"] || '';
+        document.getElementById('origen').value = persona["ORIGEN"] || '';
         document.getElementById('cargo').value = persona["CARGO"] || '';
-        document.getElementById('fechaIngreso').value = persona["FECHA INGRESO"] || '';
-        document.getElementById('tipoTrabajador').value = persona["TIPO"] || '';
+        document.getElementById('fechaFalta').value = persona["FECHA FALTA"] || '';
+        document.getElementById('historico').value = persona["HISTORICO"] || '';
         
         alert("✅ Trabajador encontrado con éxito.");
     } else {
@@ -294,13 +294,13 @@
             dni: document.getElementById('dni').value,
             nom: document.getElementById('nombres').value,
             sex: document.getElementById('sexo').value,
-            eda: document.getElementById('edad').value,
+            eda: document.getElementById('modalidad').value,
             cel: document.getElementById('celular').value,
-            fun: document.getElementById('fundo').value,
-            are: document.getElementById('area').value,
+            fun: document.getElementById('placa').value,
+            are: document.getElementById('origen').value,
             car: document.getElementById('cargo').value,
-            fIng: document.getElementById('fechaIngreso').value,
-            tipT: document.getElementById('tipoTrabajador').value,
+            fIng: document.getElementById('fechaFalta').value,
+            tipT: document.getElementById('historico').value,
             cont: document.getElementById('contacto').value,
             fLlam: document.getElementById('fechaLlamada').value,
             mot: document.getElementById('motivo').value,
@@ -337,13 +337,13 @@
             fd.append("dni", r.dni);
             fd.append("nombres", r.nom);
             fd.append("sexo", r.sex);
-            fd.append("edad", r.eda);
+            fd.append("modalidad", r.eda);
             fd.append("celular", r.cel);
-            fd.append("fundo", r.fun);
-            fd.append("area", r.are);
+            fd.append("placa", r.fun);
+            fd.append("origen", r.are);
             fd.append("cargo", r.car);
             fd.append("fIngreso", r.fIng);
-            fd.append("tipoT", r.tipT);
+            fd.append("historico", r.tipT);
             fd.append("contacto", r.cont);
             fd.append("fLlamada", r.fLlam);
             fd.append("motivo", r.mot);
